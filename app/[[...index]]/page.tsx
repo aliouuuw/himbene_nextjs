@@ -1,12 +1,16 @@
-import { auth } from "@clerk/nextjs/server"
+import { getAuthenticatedUserRole } from "@/app/actions/user-actions"
 import { redirect } from "next/navigation"
 
 export default async function Home() {
-  const { userId } = await auth()
+  const userRole = await getAuthenticatedUserRole()
   
-  // If user is authenticated, redirect to dashboard
-  if (userId) {
-    redirect("/dashboard")
+  // If user is authenticated, redirect to correct dashboard depending on role
+  if (userRole && userRole === 'ADMIN') {
+    redirect("/dashboard/admin/users")
+  } else if (userRole && userRole === 'INFOGRAPHE') {
+    redirect("/dashboard/infographe")
+  } else if (userRole && userRole === 'COMMERCIAL') {
+    redirect("/dashboard/commercial")
   }
   
   // If not authenticated, redirect to sign-in

@@ -17,14 +17,20 @@ export function ConnectedAccounts() {
         <CardDescription>Manage your connected social media accounts</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3">
           {connectedAccounts.map((account) => (
-            <div key={account.name} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center space-x-4">
-                <account.icon className="w-6 h-6" />
-                <span>{account.name}</span>
+            <div 
+              key={account.name} 
+              className="flex flex-wrap items-center justify-between p-3 border rounded-lg space-y-2 sm:space-y-0"
+            >
+              <div className="flex items-center space-x-3 min-w-[140px]">
+                <account.icon className="w-5 h-5" />
+                <span className="text-sm">{account.name}</span>
               </div>
-              <Button variant={account.connected ? "outline" : "default"}>
+              <Button 
+                variant={account.connected ? "outline" : "default"}
+                className="w-full sm:w-auto"
+              >
                 {account.connected ? "Disconnect" : "Connect"}
               </Button>
             </div>

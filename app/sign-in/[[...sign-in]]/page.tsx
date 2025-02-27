@@ -12,6 +12,9 @@ export default function SignInPage() {
         appearance={{
           baseTheme: theme === "dark" ? dark : undefined,
         }}
+        routing="path"
+        path="/sign-in"
+        signUpUrl=""
       />
     </div>
   );
