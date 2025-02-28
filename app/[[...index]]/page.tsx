@@ -6,7 +6,7 @@ export default async function Home() {
   
   // If user is authenticated, redirect to correct dashboard depending on role
   if (userRole && userRole === 'ADMIN') {
-    redirect("/dashboard/admin/users")
+    redirect("/dashboard/admin/")
   } else if (userRole && userRole === 'INFOGRAPHE') {
     redirect("/dashboard/infographe")
   } else if (userRole && userRole === 'COMMERCIAL') {

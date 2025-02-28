@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   PlusCircle,
   Globe,
+  User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { UserRole } from "@prisma/client";
@@ -26,10 +27,32 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   {
-    href: "/dashboard/admin/users",
+    href: "/dashboard/admin/",
     label: "Admin",
     icon: MonitorCog,
     roles: ["ADMIN"],
+    children: [
+      {
+        href: "/dashboard/admin",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        href: "/dashboard/admin/users",
+        label: "Users",
+        icon: User,
+      },
+      {
+        href: "/dashboard/admin/posts",
+        label: "Posts",
+        icon: PenTool,
+      },
+      {
+        href: "/dashboard/admin/platforms",
+        label: "Platforms",
+        icon: Globe,
+      },
+    ],    
   },
   {
     href: "#",
@@ -154,7 +177,7 @@ export function SidebarNav({ userRole }: { userRole: UserRole | null }) {
       <Button
         key={item.href}
         asChild
-        variant={pathname === item.href ? "secondary" : "ghost"}
+        variant={isActive ? "secondary" : "ghost"}
         className="w-full justify-start"
         disabled={cannotAccess(userRole, item.roles)}
       >
@@ -165,7 +188,7 @@ export function SidebarNav({ userRole }: { userRole: UserRole | null }) {
             e.preventDefault();
           }
         }}
-        className={`${cannotAccess(userRole, item.roles) ? 'pointer-events-none opacity-50' : ''}`}
+        className={`${cannotAccess(userRole, item.roles) ? 'pointer-events-none opacity-50' : ''} ${isActive ? 'bg-muted' : ''}`}
       >
         <item.icon className="mr-2 h-4 w-4" />
         {item.label}

@@ -4,6 +4,8 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/Header";
+import { Toaster } from "@/components/ui/sonner"
+
 
 // TODO: Make sure the theme is consistent across the app (before and after authentication)
 
@@ -34,6 +36,7 @@ export default function RootLayout({
           >
             <Header />
             {children}
+            <Toaster />
           </ThemeProvider>
         </body>
       </html>
