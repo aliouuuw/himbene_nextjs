@@ -1,37 +1,13 @@
 import { notFound } from "next/navigation";
 import prismaClient from "@/lib/prisma-client";
 import { Metadata } from "next";
-import { Post } from "@prisma/client";
 import Image from "next/image";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-type PostWithRelations = Post & {
-  brand: {
-    name: string;
-  };
-  wig?: {
-    name: string;
-    description: string | null;
-    basePrice: string; 
-    color: {
-      name: string;
-      hexCode: string | null;
-    };
-    size: {
-      name: string;
-      description: string | null;
-    };
-    currency: {
-      symbol: string;
-      rate: string; 
-      name: string;
-    };
-    imageUrls: string[];
-  } | null;
-};
+import { PostWithRelations } from "@/types";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ postId: string }> }
