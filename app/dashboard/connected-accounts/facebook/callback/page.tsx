@@ -1,12 +1,18 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { connectFacebookAccount } from "@/app/actions/facebook-actions";
+import { NextPage } from 'next';
 
-export default async function FacebookCallbackPage({
+interface PageProps {
+  searchParams: {
+    code?: string;
+    error?: string;
+  };
+}
+
+const FacebookCallback: NextPage<PageProps> = async ({
   searchParams,
-}: {
-  searchParams: { code?: string; error?: string };
-}) {
+}) => {
   const { userId } = await auth();
   
   if (!userId) {
@@ -33,4 +39,6 @@ export default async function FacebookCallbackPage({
     console.error("Facebook connection error:", error);
     redirect(`/dashboard/connected-accounts?error=facebook_connection_failed&message=${encodeURIComponent(error.message)}`);
   }
-}
+};
+
+export default FacebookCallback;
