@@ -1,8 +1,13 @@
 import { CreatePostForm } from "../_components/CreatePostForm";
-import { getBrands } from "@/app/actions/admin-actions";
+import { getBrands, getWigColors, getWigSizes, getCurrencies } from "@/app/actions/admin-actions";
 
 export default async function PostsPage() {
-  const brands = await getBrands();
+  const [brands, colors, sizes, currencies] = await Promise.all([
+    getBrands(),
+    getWigColors(),
+    getWigSizes(),
+    getCurrencies(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -10,7 +15,12 @@ export default async function PostsPage() {
       <div className="space-y-6">
         <section>
           <h2 className="text-xl font-semibold mb-4">Create Post</h2>
-          <CreatePostForm brands={brands} />
+          <CreatePostForm 
+            brands={brands}
+            colors={colors}
+            sizes={sizes}
+            currencies={currencies}
+          />
         </section>
         <section>
           <h2 className="text-xl font-semibold mb-4">Published Posts</h2>
@@ -23,4 +33,4 @@ export default async function PostsPage() {
       </div>
     </div>
   );
-} 
+}

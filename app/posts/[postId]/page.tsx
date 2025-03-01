@@ -4,7 +4,10 @@ import { Metadata } from "next";
 import { Post } from "@prisma/client";
 import Image from "next/image";
 import { format } from "date-fns";
-
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 type PostWithRelations = Post & {
   brand: {
     name: string;
@@ -12,16 +15,21 @@ type PostWithRelations = Post & {
   wig?: {
     name: string;
     description: string | null;
-    basePrice: number;
+    basePrice: string; 
     color: {
       name: string;
+      hexCode: string | null;
     };
     size: {
       name: string;
+      description: string | null;
     };
     currency: {
       symbol: string;
+      rate: string; 
+      name: string;
     };
+    imageUrls: string[];
   } | null;
 };
 
@@ -45,8 +53,8 @@ export async function generateMetadata(
 
   if (!post) return {};
 
-  const title = post.wig?.name || post.brand.name;
-  const description = post.content;
+  const title = post.wig?.name || post.brand.name + `${post.wig?.color.name} ${post.wig?.size.name}`;
+  const description = post.content + ` ${post.wig?.basePrice}`;
   const imageUrl = Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0
     ? post.mediaUrls[0]
     : "/default-social-image.jpg";
@@ -74,6 +82,11 @@ export async function generateMetadata(
         height: 630,
       }],
     },
+    other: {
+      'application-name': post.brand.name,
+      'author': post.brand.name,
+      'linkedin:article:published_time': post.createdAt.toISOString(),
+    }
   };
 }
 
@@ -93,51 +106,139 @@ export default async function PostPage(
         },
       },
     },
-  }) as PostWithRelations | null;
+  });
 
   if (!post) return notFound();
 
+  const serializedPost = {
+    ...post,
+    wig: post.wig ? {
+      ...post.wig,
+      basePrice: post.wig.basePrice.toString(),
+      currency: {
+        ...post.wig.currency,
+        rate: post.wig.currency.rate.toString(),
+      },
+    } : null,
+  } as PostWithRelations;
+
+  const { wig } = serializedPost;
+
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6">
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">{post.brand.name}</h1>
-        
-        {post.wig && (
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <h2 className="text-xl font-semibold">{post.wig.name}</h2>
-            {post.wig.description && (
-              <p className="text-muted-foreground">{post.wig.description}</p>
-            )}
-            <div className="flex gap-4 text-sm">
-              <span>Size: {post.wig.size.name}</span>
-              <span>Color: {post.wig.color.name}</span>
+    <div className="max-w-4xl mx-auto p-4 space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">{serializedPost.brand.name}</h1>
+        <Badge variant="outline">
+          Posted {format(new Date(serializedPost.createdAt), "MMMM d, yyyy")}
+        </Badge>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-4">
+          {serializedPost.mediaUrls && Array.isArray(serializedPost.mediaUrls) && serializedPost.mediaUrls.length > 0 ? (
+            <div className="grid gap-4">
+              {serializedPost.mediaUrls.map((url, index) => (
+                <div key={index} className="relative aspect-square">
+                  <Image
+                    src={typeof url === 'string' ? url : '/default-social-image.jpg'}
+                    alt={`Post image ${index + 1}`}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                </div>
+              ))}
             </div>
-            <p className="text-lg font-medium">
-              {post.wig.basePrice} {post.wig.currency.symbol}
-            </p>
-          </div>
-        )}
+          ) : (
+            <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+              <p className="text-muted-foreground">No images available</p>
+            </div>
+          )}
+        </div>
 
-        <p className="text-lg">{post.content}</p>
+        <div className="space-y-6">
+          {wig ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{wig.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {wig.description && (
+                  <p className="text-muted-foreground">{wig.description}</p>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Size</p>
+                    <Badge variant="secondary" className="text-base">
+                      {wig.size.name}
+                    </Badge>
+                    {wig.size.description && (
+                      <p className="text-xs text-muted-foreground">
+                        {wig.size.description}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Color</p>
+                    <div className="flex items-center gap-2">
+                      {wig.color.hexCode && (
+                        <div 
+                          className="w-6 h-6 rounded-full border"
+                          style={{ backgroundColor: wig.color.hexCode }}
+                        />
+                      )}
+                      <Badge variant="secondary" className="text-base">
+                        {wig.color.name}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
 
-        {post.mediaUrls && Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-2">
-            {post.mediaUrls.map((url, index) => (
-              <div key={index} className="relative aspect-square">
-                <Image
-                  src={typeof url === 'string' ? url : '/default-social-image.jpg'}
-                  alt={`Post image ${index + 1}`}
-                  fill
-                  className="object-cover rounded-lg"
-                />
-              </div>
-            ))}
-          </div>
-        )}
+                <div className="pt-4 border-t">
+                  <div className="flex items-baseline justify-between">
+                    <p className="text-2xl font-bold">
+                      {wig.basePrice} {wig.currency.symbol}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {wig.currency.name}
+                    </p>
+                  </div>
+                </div>
 
-        <p className="text-sm text-muted-foreground">
-          Posted on {format(new Date(post.createdAt), "MMMM d, yyyy")}
-        </p>
+                <div className="pt-4 flex gap-4">
+                  <Button asChild className="flex-1">
+                    <Link href={`/contact?product=${wig.name}`}>
+                      Contact Seller
+                    </Link>
+                  </Button>
+                  <Button variant="secondary" className="flex-1">
+                    Share
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">
+                  No product details available
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Description</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                {serializedPost.content}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

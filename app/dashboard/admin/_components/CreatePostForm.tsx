@@ -13,15 +13,53 @@ import Image from 'next/image';
 import { createDraftPost } from '@/app/actions/post-actions';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brand } from '@prisma/client';
+import { Brand, WigColor, WigSize } from '@prisma/client';
 import { useUploadThing } from '@/lib/uploadthing';
 
-export function CreatePostForm({ brands }: { brands: Brand[] }) {
+type Currency = {
+  id: string;
+  name: string;
+  symbol: string;
+  rate: string;
+  isBase: boolean;
+  lastUpdated: Date;
+};
+
+type WigFormData = {
+  name: string;
+  description: string;
+  basePrice: number;
+  colorId: string;
+  sizeId: string;
+  currencyId: string;
+};
+
+interface CreatePostFormProps {
+  brands: Brand[];
+  colors: WigColor[];
+  sizes: WigSize[];
+  currencies: Currency[];
+}
+
+export function CreatePostForm({ 
+  brands,
+  colors,
+  sizes,
+  currencies,
+}: CreatePostFormProps) {
   const [content, setContent] = useState('');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [files, setFiles] = useState<File[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [wigData, setWigData] = useState<WigFormData>({
+    name: '',
+    description: '',
+    basePrice: 0,
+    colorId: '',
+    sizeId: '',
+    currencyId: currencies[0]?.id || '',
+  });
   const { startUpload } = useUploadThing("postMedia");
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -41,17 +79,38 @@ export function CreatePostForm({ brands }: { brands: Brand[] }) {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleWigDataChange = (field: keyof WigFormData, value: string | number) => {
+    if (field === 'basePrice') {
+      // Handle empty string or invalid number
+      const numValue = value === '' ? 0 : parseFloat(value.toString());
+      setWigData(prev => ({
+        ...prev,
+        [field]: isNaN(numValue) ? 0 : numValue
+      }));
+    } else {
+      setWigData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBrand) {
       toast.error('Please select a brand');
       return;
     }
+
+    // Validate wig data
+    if (!wigData.name || !wigData.colorId || !wigData.sizeId || wigData.basePrice <= 0) {
+      toast.error('Please fill in all required wig information');
+      return;
+    }
     
     setIsSubmitting(true);
 
     try {
-      // First upload the files to UploadThing
       let mediaUrls: string[] = [];
       if (files.length > 0) {
         const uploadResponse = await startUpload(files);
@@ -61,12 +120,15 @@ export function CreatePostForm({ brands }: { brands: Brand[] }) {
         mediaUrls = uploadResponse.map(file => file.url);
       }
 
-      // Then create the draft post with the uploaded URLs
       const result = await createDraftPost({
         content,
         mediaUrls,
         scheduledFor: date,
         brandId: selectedBrand,
+        wigData: {
+          ...wigData,
+          imageUrls: mediaUrls,
+        },
       });
       
       if (result.success) {
@@ -74,6 +136,14 @@ export function CreatePostForm({ brands }: { brands: Brand[] }) {
         setContent('');
         setFiles([]);
         setDate(new Date());
+        setWigData({
+          name: '',
+          description: '',
+          basePrice: 0,
+          colorId: '',
+          sizeId: '',
+          currencyId: currencies[0]?.id || '',
+        });
       } else {
         toast.error(result.error);
       }
@@ -87,7 +157,32 @@ export function CreatePostForm({ brands }: { brands: Brand[] }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
+
+      <div className="space-y-4 border rounded-lg p-4 ">
+        <h3 className="font-medium">Wig Information</h3>
+        
+        <div className="space-y-2">
+          <Label htmlFor="wigName">Wig Name</Label>
+          <input
+            type="text"
+            id="wigName"
+            value={wigData.name}
+            onChange={(e) => handleWigDataChange('name', e.target.value)}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="wigDescription">Description</Label>
+          <Textarea
+            id="wigDescription"
+            value={wigData.description}
+            onChange={(e) => handleWigDataChange('description', e.target.value)}
+            className="min-h-[100px]"
+          />
+        </div>
+        <div className="space-y-2">
         <Label htmlFor="brand">Select Brand</Label>
         <Select
           value={selectedBrand}
@@ -104,6 +199,78 @@ export function CreatePostForm({ brands }: { brands: Brand[] }) {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="wigPrice">Price</Label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                id="wigPrice"
+                value={wigData.basePrice || ''}
+                onChange={(e) => handleWigDataChange('basePrice', e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+                min="0"
+                step="0.01"
+                required
+              />
+              <Select
+                value={wigData.currencyId}
+                onValueChange={(value) => handleWigDataChange('currencyId', value)}
+              >
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.id} value={currency.id}>
+                      {currency.symbol}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="wigColor">Color</Label>
+            <Select
+              value={wigData.colorId}
+              onValueChange={(value) => handleWigDataChange('colorId', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a color" />
+              </SelectTrigger>
+              <SelectContent>
+                {colors.map((color) => (
+                  <SelectItem key={color.id} value={color.id}>
+                    {color.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="wigSize">Size</Label>
+            <Select
+              value={wigData.sizeId}
+              onValueChange={(value) => handleWigDataChange('sizeId', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a size" />
+              </SelectTrigger>
+              <SelectContent>
+                {sizes.map((size) => (
+                  <SelectItem key={size.id} value={size.id}>
+                    {size.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">

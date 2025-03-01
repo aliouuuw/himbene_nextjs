@@ -121,7 +121,191 @@ export async function updateBrand(brandId: string, name: string) {
   });
 }
 
+export async function getWigColors() {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
 
+  return await prismaClient.wigColor.findMany({
+    orderBy: {
+      name: 'asc',
+    },
+  });
+}
 
+export async function getWigSizes() {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
 
+  return await prismaClient.wigSize.findMany({
+    orderBy: {
+      orderIndex: 'asc',
+    },
+  });
+}
 
+export async function getCurrencies() {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  const currencies = await prismaClient.currency.findMany({
+    orderBy: {
+      name: 'asc',
+    },
+  });
+
+  // Convert Decimal to string for serialization
+  return currencies.map(currency => ({
+    ...currency,
+    rate: currency.rate.toString(),
+  }));
+}
+
+// Wig Color Actions
+export async function createWigColor(name: string, hexCode?: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.wigColor.create({
+    data: {
+      name,
+      hexCode,
+    },
+  });
+}
+
+export async function updateWigColor(id: string, name: string, hexCode?: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.wigColor.update({
+    where: { id },
+    data: {
+      name,
+      hexCode,
+    },
+  });
+}
+
+export async function deleteWigColor(id: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.wigColor.delete({
+    where: { id },
+  });
+}
+
+// Wig Size Actions
+export async function createWigSize(name: string, description?: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  const maxOrderIndex = await prismaClient.wigSize.findFirst({
+    orderBy: { orderIndex: 'desc' },
+    select: { orderIndex: true },
+  });
+
+  return await prismaClient.wigSize.create({
+    data: {
+      name,
+      description,
+      orderIndex: (maxOrderIndex?.orderIndex ?? -1) + 1,
+    },
+  });
+}
+
+export async function updateWigSize(id: string, name: string, description?: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.wigSize.update({
+    where: { id },
+    data: {
+      name,
+      description,
+    },
+  });
+}
+
+export async function deleteWigSize(id: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.wigSize.delete({
+    where: { id },
+  });
+}
+
+// Currency Actions
+export async function createCurrency(id: string, name: string, symbol: string, rate: number) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.currency.create({
+    data: {
+      id, // e.g., "USD"
+      name,
+      symbol,
+      rate,
+    },
+  });
+}
+
+export async function updateCurrency(id: string, name: string, symbol: string, rate: number) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.currency.update({
+    where: { id },
+    data: {
+      name,
+      symbol,
+      rate,
+    },
+  });
+}
+
+export async function deleteCurrency(id: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.currency.delete({
+    where: { id },
+  });
+}

@@ -10,6 +10,15 @@ export type CreatePostInput = {
   mediaUrls: string[];
   scheduledFor?: Date;
   brandId: string;
+  wigData: {
+    name: string;
+    description: string;
+    basePrice: number;
+    colorId: string;
+    sizeId: string;
+    currencyId: string;
+    imageUrls: string[];
+  };
 };
 
 type PostWithRelations = Post & {
@@ -24,10 +33,11 @@ type PostWithRelations = Post & {
     id: string;
     name: string;
     description: string | null;
-    basePrice: number;
+    basePrice: string;
     currencyId: string;
     currency: {
       symbol: string;
+      rate: string;
     };
     color: {
       name: string;
@@ -46,6 +56,22 @@ export async function createDraftPost(input: CreatePostInput) {
   }
 
   try {
+    // Create the wig first
+    const wig = await prismaClient.wig.create({
+      data: {
+        name: input.wigData.name,
+        description: input.wigData.description,
+        basePrice: input.wigData.basePrice,
+        colorId: input.wigData.colorId,
+        sizeId: input.wigData.sizeId,
+        currencyId: input.wigData.currencyId,
+        brandId: input.brandId,
+        imageUrls: input.wigData.imageUrls,
+        status: "ACTIVE",
+      },
+    });
+
+    // Then create the post with the new wig
     const post = await prismaClient.post.create({
       data: {
         content: input.content,
@@ -54,6 +80,7 @@ export async function createDraftPost(input: CreatePostInput) {
         status: PostStatus.DRAFT,
         userId: userId,
         brandId: input.brandId,
+        wigId: wig.id,
       },
     });
 
@@ -95,7 +122,20 @@ export async function getDraftPosts(): Promise<{ success: boolean; data?: PostWi
       },
     });
 
-    return { success: true, data: posts as PostWithRelations[] };
+    // Convert Decimal values to strings in wigs and currencies
+    const serializedPosts = posts.map(post => ({
+      ...post,
+      wig: post.wig ? {
+        ...post.wig,
+        basePrice: post.wig.basePrice.toString(),
+        currency: {
+          ...post.wig.currency,
+          rate: post.wig.currency.rate.toString(),
+        },
+      } : null,
+    }));
+
+    return { success: true, data: serializedPosts as unknown as PostWithRelations[] };
   } catch (error) {
     console.error("Failed to fetch draft posts:", error);
     return { success: false, error: "Failed to fetch draft posts" };

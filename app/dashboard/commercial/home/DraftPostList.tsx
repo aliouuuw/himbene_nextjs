@@ -49,22 +49,27 @@ export function DraftPostsList({ posts }: { posts: PostWithRelations[] }) {
   }
 
   const formatShareContent = (post: PostWithRelations) => {
-    let content = post.content;
+    const content = post.content;
+    console.log(post);
 
-    if (post.wig) {
-      const wigInfo = `🎀 ${post.wig.name}
-${post.wig.description || ""}
-Size: ${post.wig.size.name}
-Color: ${post.wig.color.name}
+//     if (post.wig) {
+//       const wigInfo = `🎀 ${post.wig.name}
+// ${post.wig.description || ""}
+// Size: ${post.wig.size.name}
+// Color: ${post.wig.color.name}
 
-`;
-      content = wigInfo + content;
-    }
+// `;
+//       content = wigInfo + content;
+//     }
 
     // Add brand hashtag
-    content += `\n\n#${post.brand.name.replace(/\s+/g, "")}`;
+    //content += `\n\n#${post.brand.name.replace(/\s+/g, "")}`;
 
     return content;
+  };
+
+  const formatCurrency = (amount: number, currency: string) => {
+    return `${amount} ${currency}`;
   };
 
   return (
@@ -85,7 +90,7 @@ Color: ${post.wig.color.name}
                 <p className="font-medium">{post.wig.name}</p>
                 {post.wig.description && (
                   <p className="text-sm text-muted-foreground">
-                    {post.wig.description}
+                    {post.wig.description} +
                   </p>
                 )}
                 <div className="flex gap-2 text-sm">
@@ -93,9 +98,9 @@ Color: ${post.wig.color.name}
                   <span>•</span>
                   <span>Color: {post.wig.color.name}</span>
                 </div>
-                {/* <p className="font-medium">
+                <p className="font-medium">
                   {formatCurrency(post.wig.basePrice, post.wig.currency.symbol)}
-                </p> */}
+                </p>
               </div>
             )}
 
@@ -134,15 +139,14 @@ Color: ${post.wig.color.name}
 
             <div className="flex gap-2 pt-4">
               <FacebookShareButton
-                url={process.env.NEXT_PUBLIC_APP_URL || ""}
-                quote={formatShareContent(post)}
-                hashtag={`#${post.brand.name.replace(/\s+/g, "")}`}
+                url={process.env.NEXT_PUBLIC_APP_URL + "/posts/" + post.id || ""}
+                quote={"Test 1 quote"}
               >
                 <FacebookIcon size={32} round />
               </FacebookShareButton>
 
               <TwitterShareButton
-                url={process.env.NEXT_PUBLIC_APP_URL || ""}
+                url={process.env.NEXT_PUBLIC_APP_URL + "/posts/" + post.id || ""}
                 title={formatShareContent(post)}
                 hashtags={[post.brand.name.replace(/\s+/g, "")]}
               >
@@ -150,7 +154,7 @@ Color: ${post.wig.color.name}
               </TwitterShareButton>
 
               <LinkedinShareButton
-                url={process.env.NEXT_PUBLIC_APP_URL || ""}
+                url={process.env.NEXT_PUBLIC_APP_URL + "/posts/" + post.id || ""}
                 title={post.wig?.name || post.brand.name}
                 summary={formatShareContent(post)}
               >
