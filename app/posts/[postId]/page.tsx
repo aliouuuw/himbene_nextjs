@@ -25,15 +25,12 @@ type PostWithRelations = Post & {
   } | null;
 };
 
-interface PageProps {
-  params: {
-    postId: string;
-  };
-}
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: { params: Promise<{ postId: string }> }
+): Promise<Metadata> {
+  const postId = (await params).postId;
   const post = await prismaClient.post.findUnique({
-    where: { id: params.postId },
+    where: { id: postId as string },
     include: {
       brand: true,
       wig: {
@@ -80,10 +77,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function PostPage({ params }: PageProps) {
-  const { postId } = params;
+export default async function PostPage(
+  { params }: { params: Promise<{ postId: string }> }
+) {
+  const postId = (await params).postId;
   const post = await prismaClient.post.findUnique({
-    where: { id: postId },
+    where: { id: postId as string },
     include: {
       brand: true,
       wig: {
