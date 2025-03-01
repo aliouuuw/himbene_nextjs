@@ -10,6 +10,7 @@ interface CreateUserData {
   role: UserRole;
   firstName?: string;
   lastName?: string;
+  brandIds: string[];
 }
 
 export async function createUser(data: CreateUserData) {
@@ -33,7 +34,8 @@ export async function createUser(data: CreateUserData) {
           role: data.role,
           firstName: data.firstName,
           lastName: data.lastName,
-          pendingDbCreation: true
+          pendingDbCreation: true,
+          brandIds: data.brandIds
         }
       }),
     });
@@ -42,7 +44,7 @@ export async function createUser(data: CreateUserData) {
       throw new Error('Failed to send invitation');
     }
 
-    // Instead of creating the user immediately, we'll store the pending invitation
+    // Store the pending invitation with brand associations
     const pendingUser = await prismaClient.pendingUser.create({
       data: {
         email: data.email,
@@ -68,6 +70,13 @@ export async function getUsers() {
   }
 
   return await prismaClient.user.findMany({
+    include: {
+      brands: {
+        include: {
+          brand: true
+        }
+      }
+    },
     orderBy: { createdAt: 'desc' }
   });
 }
@@ -308,4 +317,63 @@ export async function deleteCurrency(id: string) {
   return await prismaClient.currency.delete({
     where: { id },
   });
+}
+
+export async function updateUser(userId: string, data: {
+  role?: UserRole;
+  firstName?: string;
+  lastName?: string;
+  brandIds?: string[];
+  isActive?: boolean;
+}) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  const user = await prismaClient.user.update({
+    where: { id: userId },
+    data: {
+      role: data.role,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      isActive: data.isActive,
+      brands: {
+        deleteMany: {},
+        create: data.brandIds?.map(brandId => ({
+          brandId
+        }))
+      }
+    },
+    include: {
+      brands: {
+        include: {
+          brand: true
+        }
+      }
+    }
+  });
+
+  revalidatePath('/admin/users');
+  return user;
+}
+
+export async function deleteUser(userId: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  await prismaClient.user.update({
+    where: { id: userId },
+    data: {
+      isActive: false,
+      deletedAt: new Date()
+    }
+  });
+
+  revalidatePath('/admin/users');
+  return { success: true };
 }

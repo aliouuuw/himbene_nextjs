@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UserRole } from '@prisma/client';
+import { UserRole, Brand } from '@prisma/client';
 import { createUser } from '@/app/actions/admin-actions';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,13 @@ import {
 import { useForm } from "react-hook-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { MultiSelect } from "@/components/ui/multi-select";
 
-export default function UserForm() {
+interface UserFormProps {
+  brands: Brand[];
+}
+
+export default function UserForm({ brands }: UserFormProps) {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   
   const form = useForm({
@@ -34,9 +39,16 @@ export default function UserForm() {
       email: '',
       role: 'COMMERCIAL' as UserRole,
       firstName: '',
-      lastName: ''
+      lastName: '',
+      brandIds: [] as string[]
     }
   });
+
+  // Transform brands into the format expected by MultiSelect
+  const brandOptions = brands.map(brand => ({
+    label: brand.name,
+    value: brand.id
+  }));
 
   const onSubmit = async (data: any) => {
     try {
@@ -132,6 +144,25 @@ export default function UserForm() {
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="brandIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Brands</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={brandOptions}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      placeholder="Select brands"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

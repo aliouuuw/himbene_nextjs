@@ -101,10 +101,17 @@ export async function getDraftPosts(): Promise<{ success: boolean; data?: PostWi
       return { success: false, error: "Unauthorized" };
     }
 
+    // Get posts in draft that are associated with the user's brand
     const posts = await prismaClient.post.findMany({
       where: {
-        userId,
         status: PostStatus.DRAFT,
+        brand: {
+          users: {
+            some: {
+              userId: userId,
+            },
+          },
+        },
       },
       include: {
         user: true,
