@@ -29,8 +29,8 @@ export async function generateMetadata(
 
   if (!post) return {};
 
-  const title = post.wig?.name || post.brand.name + `${post.wig?.color.name} ${post.wig?.size.name}`;
-  const description = post.content + ` ${post.wig?.basePrice}`;
+  const title = post.wig?.name + "|" + ` ${post.wig?.basePrice} F` || post.brand.name + "|" + ` ${post.wig?.basePrice} F`;
+  const description = post.content;
   const imageUrl = Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0
     ? post.mediaUrls[0]
     : "/default-social-image.jpg";
