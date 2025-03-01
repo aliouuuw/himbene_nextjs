@@ -1,25 +1,20 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { connectFacebookAccount } from "@/app/actions/facebook-actions";
-import { NextPage } from 'next';
 
-interface PageProps {
-  searchParams: {
-    code?: string;
-    error?: string;
-  };
-}
-
-const FacebookCallback: NextPage<PageProps> = async ({
+// For App Router pages, we use this pattern
+export default async function FacebookCallback({
   searchParams,
-}) => {
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const { userId } = await auth();
   
   if (!userId) {
     redirect("/sign-in");
   }
   
-  const { code, error } = searchParams;
+  const { code, error } = await searchParams;
   
   if (error) {
     // Handle error case
@@ -32,13 +27,11 @@ const FacebookCallback: NextPage<PageProps> = async ({
   
   try {
     // Call server action to handle the OAuth exchange
-    await connectFacebookAccount(code, userId);
+    await connectFacebookAccount(code as string, userId);
     redirect("/dashboard/connected-accounts?success=facebook_connected");
   } catch (e: unknown) {
     const error = e as Error;
     console.error("Facebook connection error:", error);
     redirect(`/dashboard/connected-accounts?error=facebook_connection_failed&message=${encodeURIComponent(error.message)}`);
   }
-};
-
-export default FacebookCallback;
+}
