@@ -52,8 +52,7 @@ export function DraftPostsList({ posts }: { posts: PostWithRelations[] }) {
     let content = post.content;
 
     if (post.wig) {
-      const wigInfo = `
-🎀 ${post.wig.name}
+      const wigInfo = `🎀 ${post.wig.name}
 ${post.wig.description || ""}
 Size: ${post.wig.size.name}
 Color: ${post.wig.color.name}
