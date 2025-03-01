@@ -191,8 +191,8 @@ function EditUserForm({ user, brands, onSubmit }: {
         <label className="block text-sm font-medium mb-1">Brands</label>
         <MultiSelect
           options={brandOptions}
-          onValueChange={setSelectedBrands}
-          defaultValue={selectedBrands}
+          selected={selectedBrands}
+          onChange={setSelectedBrands}
           placeholder="Select brands"
         />
       </div>

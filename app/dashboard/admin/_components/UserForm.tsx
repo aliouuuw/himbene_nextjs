@@ -159,8 +159,8 @@ export default function UserForm({ brands }: UserFormProps) {
                   <FormControl>
                     <MultiSelect
                       options={brandOptions}
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      selected={field.value}
+                      onChange={field.onChange}
                       placeholder="Select brands"
                     />
                   </FormControl>
