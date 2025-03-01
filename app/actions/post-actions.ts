@@ -2,8 +2,17 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import prismaClient from "@/lib/prisma-client";
+import { PostStatus } from "@prisma/client";
 
-export async function createPost(formData: FormData) {
+export type CreatePostInput = {
+  content: string;
+  mediaUrls: string[];
+  scheduledFor?: Date;
+  brandId: string;
+};
+
+export async function createDraftPost(input: CreatePostInput) {
   const { userId } = await auth();
   
   if (!userId) {
@@ -11,85 +20,51 @@ export async function createPost(formData: FormData) {
   }
 
   try {
-    const content = formData.get('content') as string;
-    const files = formData.getAll('files') as File[];
-    
-    const fileBuffers = await Promise.all(
-      files.map(async (file) => {
-        const bytes = await file.arrayBuffer();
-        return Buffer.from(bytes);
-      })
-    );
+    const post = await prismaClient.post.create({
+      data: {
+        content: input.content,
+        mediaUrls: input.mediaUrls,
+        scheduledFor: input.scheduledFor,
+        status: PostStatus.DRAFT,
+        userId: userId,
+        brandId: input.brandId,
+      },
+    });
 
-    const testConnection = {
-      accessToken: process.env.FACEBOOK_PAGE_ACCESS_TOKEN,
-      platformAccountId: process.env.FACEBOOK_PAGE_ID
-    };
-
-    if (!testConnection.accessToken) {
-      throw new Error('Facebook access token not found');
-    }
-
-    try {
-      // First, upload all images and get their IDs
-      const mediaIds = await Promise.all(
-        fileBuffers.map(async (buffer) => {
-          const photoFormData = new FormData();
-          photoFormData.append('source', new Blob([buffer]));
-          photoFormData.append('access_token', testConnection.accessToken!);
-          photoFormData.append('published', 'false'); // Don't publish immediately
-
-          const response = await fetch(
-            `https://graph.facebook.com/${testConnection.platformAccountId}/photos`,
-            {
-              method: 'POST',
-              body: photoFormData,
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error(`Facebook API error: ${response.statusText}`);
-          }
-
-          const data = await response.json();
-          return data.id;
-        })
-      );
-
-      // Then create the post with all media attached
-      const postResponse = await fetch(
-        `https://graph.facebook.com/${testConnection.platformAccountId}/feed`,
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            message: content,
-            attached_media: mediaIds.map(id => ({ media_fbid: id })),
-            access_token: testConnection.accessToken,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!postResponse.ok) {
-        throw new Error(`Facebook API error: ${postResponse.statusText}`);
-      }
-
-      const fbResponse = await postResponse.json();
-      console.log('Facebook post created:', fbResponse);
-    } catch (error) {
-      console.error(`Failed to post to Facebook:`, error);
-      throw error;
-    }
-
+    revalidatePath('/dashboard/commercial/home');
     revalidatePath('/dashboard/admin');
-    return { success: true };
+    
+    return { success: true, data: post };
   } catch (error) {
-    console.error('Create post error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create post' 
-    };
+    console.error('Failed to create post:', error);
+    return { success: false, error: 'Failed to create post' };
   }
-} 
+}
+
+export async function getDraftPosts() {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const posts = await prismaClient.post.findMany({
+      where: {
+        status: PostStatus.DRAFT,
+      },
+      include: {
+        user: true,
+        brand: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return { success: true, data: posts };
+  } catch (error) {
+    console.error('Failed to fetch draft posts:', error);
+    return { success: false, error: 'Failed to fetch draft posts' };
+  }
+}

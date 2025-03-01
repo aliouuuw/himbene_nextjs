@@ -10,9 +10,9 @@ import {
   ChevronDown,
   ChevronRight,
   LayoutDashboard,
-  PlusCircle,
   Globe,
   User,
+  Home,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { UserRole } from "@prisma/client";
@@ -60,14 +60,9 @@ export const navItems: NavItem[] = [
     icon: PenTool,
     children: [
       {
-        href: "/dashboard/infographe",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-      {
-        href: "/dashboard/infographe/create",
-        label: "Créer un post",
-        icon: PlusCircle,
+        href: "/dashboard/infographe/home",
+        label: "Accueil",
+        icon: Home,
       },
     ],
     roles: ["ADMIN", "INFOGRAPHE"],
@@ -78,13 +73,13 @@ export const navItems: NavItem[] = [
     icon: Share2,
     children: [
       {
-        href: "/dashboard/commercial",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
+        href: "/dashboard/commercial/home",
+        label: "Accueil",
+        icon: Home,
       },
       {
-        href: "/dashboard/commercial/publish",
-        label: "Publier un post",
+        href: "/dashboard/commercial/platforms",
+        label: "Platforms",
         icon: Globe,
       },
     ],

@@ -71,3 +71,57 @@ export async function getUsers() {
     orderBy: { createdAt: 'desc' }
   });
 }
+
+export async function createBrand(name: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.brand.create({
+    data: {
+      name: name,
+    },
+  });
+}
+
+export async function getBrands() {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.brand.findMany();
+} 
+
+export async function deleteBrand(brandId: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.brand.delete({
+    where: { id: brandId },
+  });
+}
+
+export async function updateBrand(brandId: string, name: string) {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.brand.update({
+    where: { id: brandId },
+    data: { name: name },
+  });
+}
+
+
+
+
+

@@ -8,9 +8,9 @@ export default async function Home() {
   if (userRole && userRole === 'ADMIN') {
     redirect("/dashboard/admin/")
   } else if (userRole && userRole === 'INFOGRAPHE') {
-    redirect("/dashboard/infographe")
+    redirect("/dashboard/infographe/home")
   } else if (userRole && userRole === 'COMMERCIAL') {
-    redirect("/dashboard/commercial")
+    redirect("/dashboard/commercial/home")
   }
   
   // If not authenticated, redirect to sign-in

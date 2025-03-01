@@ -2,8 +2,9 @@
 import React from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CreatePostForm } from './CreatePostForm'
+import { Brand } from '@prisma/client';
 
-function PostManagement() {
+function PostManagement({brands}: {brands: Brand[]}) {
   return (
     <div className="w-full">
       <Tabs defaultValue="create" className="w-full">
@@ -13,7 +14,7 @@ function PostManagement() {
           <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
         </TabsList>
         <TabsContent value="create" className="mt-6">
-          <CreatePostForm />
+          <CreatePostForm brands={brands} />
         </TabsContent>
         <TabsContent value="published" className="mt-6">
           <h3 className="text-lg font-semibold mb-4">Published Posts</h3>
