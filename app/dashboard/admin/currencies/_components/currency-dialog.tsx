@@ -48,15 +48,15 @@ export function CurrencyDialog({ mode, currency, onSuccess, trigger }: CurrencyD
         : await updateCurrency(currency!.id, { name, symbol, isBase });
 
       if (result.success) {
-        toast.success(`Currency ${mode === "add" ? "created" : "updated"} successfully`);
+        toast.success(`Devise ${mode === "add" ? "créée" : "modifiée"} avec succès`);
         setOpen(false);
         onSuccess?.();
       } else {
-        toast.error(result.error || `Failed to ${mode === "add" ? "create" : "update"} currency`);
+        toast.error(result.error || `Erreur lors de l'${mode === "add" ? "création" : "mise à jour"} de la devise`);
       }
     } catch (error) {
       console.error(error);
-      toast.error(`Failed to ${mode === "add" ? "create" : "update"} currency`);
+      toast.error(`Erreur lors de l'${mode === "add" ? "création" : "mise à jour"} de la devise`);
     } finally {
       setLoading(false);
     }
@@ -66,23 +66,23 @@ export function CurrencyDialog({ mode, currency, onSuccess, trigger }: CurrencyD
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || <Button variant={mode === "edit" ? "ghost" : "default"}>
-          {mode === "add" ? "Add Currency" : "Edit"}
+          {mode === "add" ? "Ajouter une devise" : "Modifier"}
         </Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add New Currency" : "Edit Currency"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Ajouter une devise" : "Modifier la devise"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "add" && (
             <div className="space-y-2">
-              <Label htmlFor="id">Currency Code</Label>
+              <Label htmlFor="id">Code de la devise</Label>
               <Select
                 value={id}
                 onValueChange={setId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a currency" />
+                  <SelectValue placeholder="Sélectionnez une devise" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(VALID_CURRENCIES).map(([code, name]) => (
@@ -95,17 +95,17 @@ export function CurrencyDialog({ mode, currency, onSuccess, trigger }: CurrencyD
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Nom</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="US Dollar"
+              placeholder="Franc CFA"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="symbol">Symbol</Label>
+            <Label htmlFor="symbol">Symbole</Label>
             <Input
               id="symbol"
               value={symbol}
@@ -121,14 +121,14 @@ export function CurrencyDialog({ mode, currency, onSuccess, trigger }: CurrencyD
               onCheckedChange={setIsBase}
               disabled={currency?.isBase} // Can't unset base currency
             />
-            <Label htmlFor="isBase">Base Currency</Label>
+            <Label htmlFor="isBase">Devise de base</Label>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save"}
+              {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>

@@ -47,22 +47,22 @@ export default function UserList({ users, brands }: UserListProps) {
     try {
       await updateUser(userId, data);
       setEditingUser(null);
-      toast.success('User updated successfully');
+      toast.success('Utilisateur mis à jour avec succès');
     } catch (error) {
-      console.error('Failed to update user:', error);
-      toast.error('Failed to update user');
+      console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+      toast.error('Erreur lors de la mise à jour de l\'utilisateur');
     }
   };
 
   const handleDelete = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur?')) return;
     
     try {
       await deleteUser(userId);
-      toast.success('User deleted successfully');
+      toast.success('Utilisateur supprimé avec succès');
     } catch (error) {
-      console.error('Failed to delete user:', error);
-      toast.error('Failed to delete user');
+      console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+      toast.error('Erreur lors de la suppression de l\'utilisateur');
     }
   };
 
@@ -91,13 +91,13 @@ export default function UserList({ users, brands }: UserListProps) {
                       variant="outline"
                       onClick={() => setEditingUser(user)}
                     >
-                      Edit
+                      Modifier
                     </Button>
                   </DialogTrigger>
                   {editingUser && (
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Edit User</DialogTitle>
+                        <DialogTitle>Modifier l&apos;utilisateur</DialogTitle>
                       </DialogHeader>
                       <EditUserForm
                         user={editingUser}
@@ -111,7 +111,7 @@ export default function UserList({ users, brands }: UserListProps) {
                   variant="destructive"
                   onClick={() => handleDelete(user.id)}
                 >
-                  Delete
+                  Supprimer
                 </Button>
               </div>
             </div>
@@ -172,7 +172,7 @@ function EditUserForm({ user, brands, onSubmit }: {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">First Name</label>
+        <label className="block text-sm font-medium mb-1">Prénom</label>
         <Input
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
@@ -180,7 +180,7 @@ function EditUserForm({ user, brands, onSubmit }: {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Last Name</label>
+        <label className="block text-sm font-medium mb-1">Nom</label>
         <Input
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
@@ -188,16 +188,16 @@ function EditUserForm({ user, brands, onSubmit }: {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Brands</label>
+        <label className="block text-sm font-medium mb-1">Marques</label>
         <MultiSelect
           options={brandOptions}
           selected={selectedBrands}
           onChange={setSelectedBrands}
-          placeholder="Select brands"
+          placeholder="Sélectionner le(s) marque(s)"
         />
       </div>
 
-      <Button type="submit">Save Changes</Button>
+      <Button type="submit">Enregistrer les modifications</Button>
     </form>
   );
 }

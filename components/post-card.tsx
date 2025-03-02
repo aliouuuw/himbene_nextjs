@@ -15,7 +15,7 @@ import {
 } from "next-share";
 import { Button } from "./ui/button";
 import { usePathname } from "next/navigation";
-
+import { fr } from "date-fns/locale";
 interface PostCardProps {
   post: PostWithRelations;
   currencies?: Currency[];
@@ -35,6 +35,7 @@ export function PostCard({
   onEdit,
   onDelete,
 }: PostCardProps) {
+
   const formatCurrency = (
     amount: number,
     currency: { symbol: string; rate: number; name?: string }
@@ -102,10 +103,10 @@ export function PostCard({
                       {post.brand.name}
                     </Badge>
                     <Badge variant="secondary" className="text-xs">
-                      {post.wig.size.name}
+                      {post.wig.size?.name}
                     </Badge>
                     <Badge variant="secondary" className="text-xs">
-                      {post.wig.color.name}
+                      {post.wig.color?.name}
                     </Badge>
                   </div>
                 )}
@@ -116,18 +117,18 @@ export function PostCard({
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                {format(new Date(post.createdAt), "MMM d, yyyy")}
+                {format(new Date(post.createdAt), "d MMMM yyyy", { locale: fr })}
               </p>
             </div>
 
             {/* Pricing */}
             <div className="bg-muted/50 p-3 rounded-md">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Base Price</span>
+                <span className="text-sm font-medium">Prix local</span>
                 <span className="text-lg font-semibold">
                   {formatCurrency(Number(post.wig.basePrice), {
-                    symbol: post.wig.currency.symbol,
-                    rate: Number(post.wig.currency.rate),
+                    symbol: post.wig.currency?.symbol,
+                    rate: Number(post.wig.currency?.rate),
                   })}
                 </span>
               </div>
@@ -135,7 +136,7 @@ export function PostCard({
               {variant === "default" && currencies.length > 0 && (
                 <div className="text-sm space-y-2 pt-2 border-t">
                   <p className="text-xs text-muted-foreground mb-1">
-                    Available in other currencies:
+                    Disponible dans d&apos;autres devises:
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {currencies
@@ -190,7 +191,7 @@ export function PostCard({
             <></>
           ) : (
             <div className="space-y-2">
-              <p className="text-sm font-medium">Share:</p>
+              <p className="text-sm font-medium">Partager:</p>
               <div className="flex gap-2">
                 <FacebookShareButton url={shareUrl}>
                   <FacebookIcon size={32} round />

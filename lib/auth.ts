@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import prismaClient from "@/lib/prisma-client";
 import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export async function getAuthenticatedUserFromDb() {
   const { userId } = await auth();
@@ -15,7 +16,20 @@ export async function getAuthenticatedUserFromDb() {
     where: { id: userId },
   });
 
-  // console.log("IN AUTH, dbUser:", dbUser)
+  // If user doesn't exist in DB but is authenticated with Clerk, log them out
+  if (!dbUser) {
+    // Sign the user out of Clerk
+    // await clerkClient.sessions.revokeSession();
+
+    const cookieStore = await cookies();
+    cookieStore.delete("__client_session");
+    cookieStore.delete('__cf_bm')
+    cookieStore.delete('__clerk_db_jwt')
+    cookieStore.delete('__client_uat')
+    cookieStore.delete('__session')
+
+    return null;
+  }
 
   return dbUser;
 }

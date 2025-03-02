@@ -41,7 +41,7 @@ export function ColorDialog({ mode, color, onSuccess, trigger }: ColorDialogProp
         : await updateWigColor(color!.id, name, hexCode);
 
       if (result.success) {
-        toast.success(`Color ${mode === "add" ? "created" : "updated"} successfully`);
+        toast.success(`Couleur ${mode === "add" ? "créée" : "modifiée"} avec succès`);
         setOpen(false);
         onSuccess?.();
       } else {
@@ -49,7 +49,7 @@ export function ColorDialog({ mode, color, onSuccess, trigger }: ColorDialogProp
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save color");
+      toast.error("Erreur lors de l'enregistrement de la couleur");
     } finally {
       setLoading(false);
     }
@@ -59,26 +59,26 @@ export function ColorDialog({ mode, color, onSuccess, trigger }: ColorDialogProp
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || <Button variant={mode === "edit" ? "ghost" : "default"}>
-          {mode === "add" ? "Add Color" : "Edit"}
+          {mode === "add" ? "Ajouter une couleur" : "Modifier"}
         </Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add New Color" : "Edit Color"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Ajouter une couleur" : "Modifier la couleur"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Nom</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter color name"
+              placeholder="Entrez le nom de la couleur"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hexCode">Color</Label>
+            <Label htmlFor="hexCode">Couleur</Label>
             <div className="flex gap-2">
               <Input
                 id="hexCode"
@@ -97,10 +97,10 @@ export function ColorDialog({ mode, color, onSuccess, trigger }: ColorDialogProp
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save"}
+              {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>

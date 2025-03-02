@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { PostWithRelations, Currency } from "@/types";
+import { fr } from "date-fns/locale";
 
 interface Props {
   posts: PostWithRelations[];
@@ -40,20 +41,20 @@ export function InfographePostsList({ posts, currencies }: Props) {
     try {
       const result = await deletePost(postId);
       if (result.success) {
-        toast.success("Post deleted successfully");
+        toast.success("Post supprimé avec succès");
       } else {
-        toast.error(result.error || "Failed to delete post");
+        toast.error(result.error || "Erreur lors de la suppression du post");
       }
     } catch (error) {
-      console.error("Failed to delete post:", error);
-      toast.error("An error occurred while deleting the post");
+      console.error("Erreur lors de la suppression du post:", error);
+      toast.error("Une erreur est survenue lors de la suppression du post");
     }
   };
 
   if (posts.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
-        No posts available
+        Aucun post disponible
       </div>
     );
   }
@@ -64,10 +65,10 @@ export function InfographePostsList({ posts, currencies }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Brand</TableHead>
-              <TableHead>Wig</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Media</TableHead>
+              <TableHead>Marque</TableHead>
+              <TableHead>Perruque</TableHead>
+              <TableHead>Créé le</TableHead>
+              <TableHead>Médias</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -81,32 +82,32 @@ export function InfographePostsList({ posts, currencies }: Props) {
                 <TableCell>{post.brand.name}</TableCell>
                 <TableCell>{post.wig?.name || "N/A"}</TableCell>
                 <TableCell>
-                  {format(new Date(post.createdAt), "MMM d, yyyy")}
+                  {format(new Date(post.createdAt), "d MMMM yyyy", { locale: fr })}
                 </TableCell>
                 <TableCell>
-                  {post.mediaUrls && Array.isArray(post.mediaUrls) ? post.mediaUrls.length : 0} files
+                  {post.mediaUrls && Array.isArray(post.mediaUrls) ? post.mediaUrls.length : 0} fichier(s)
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                     <EditPostDialog post={post} currencies={currencies} />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">Delete</Button>
+                        <Button variant="destructive" size="sm">Supprimer</Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce post ?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the post.
+                            Cette action est irréversible. Cela supprimera définitivement le post.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleDelete(post.id)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
-                            Delete
+                            Supprimer
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>

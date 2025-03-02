@@ -19,17 +19,17 @@ export function BrandsList({ brands }: { brands: { id: string; name: string; des
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Brand Management</h1>
+        <h1 className="text-2xl font-bold">Gestion des marques</h1>
         <BrandDialog mode="add" onSuccess={() => router.refresh()} />
       </div>
 
       <Table>
-        <TableCaption>A list of all brands</TableCaption>
+        <TableCaption>Liste de toutes les marques</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Brand</TableHead>
+            <TableHead>Marque</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>Statut</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -53,7 +53,7 @@ export function BrandsList({ brands }: { brands: { id: string; name: string; des
               <TableCell>{brand.description || '-'}</TableCell>
               <TableCell>
                 <Badge variant={brand.isActive ? "default" : "secondary"}>
-                  {brand.isActive ? "Active" : "Inactive"}
+                  {brand.isActive ? "Actif" : "Inactif"}
                 </Badge>
               </TableCell>
               <TableCell className="text-right space-x-2">
@@ -64,7 +64,7 @@ export function BrandsList({ brands }: { brands: { id: string; name: string; des
                 />
                 <DeleteAlert 
                   onConfirm={() => handleDelete(brand.id)}
-                  description="This will permanently delete this brand and cannot be undone."
+                  description="Cette action est irréversible. Cela supprimera définitivement la marque et ne pourra pas être annulée."
                 />
               </TableCell>
             </TableRow>

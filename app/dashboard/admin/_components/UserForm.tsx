@@ -69,7 +69,7 @@ export default function UserForm({ brands }: UserFormProps) {
   return (
     <Card className="max-w-md">
       <CardHeader>
-        <CardTitle>Create New User</CardTitle>
+        <CardTitle>Créer un nouvel utilisateur</CardTitle>
       </CardHeader>
       <CardContent>
         {message && (
@@ -104,11 +104,11 @@ export default function UserForm({ brands }: UserFormProps) {
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>Rôle</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
+                        <SelectValue placeholder="Sélectionner un rôle" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -126,8 +126,8 @@ export default function UserForm({ brands }: UserFormProps) {
               control={form.control}
               name="firstName"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                <FormItem>  
+                  <FormLabel>Prénom</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -141,7 +141,7 @@ export default function UserForm({ brands }: UserFormProps) {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel>Nom</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -155,13 +155,13 @@ export default function UserForm({ brands }: UserFormProps) {
               name="brandIds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Brands</FormLabel>
+                  <FormLabel>Marques</FormLabel>
                   <FormControl>
                     <MultiSelect
                       options={brandOptions}
                       selected={field.value}
                       onChange={field.onChange}
-                      placeholder="Select brands"
+                      placeholder="Sélectionner le(s) marque(s)"
                     />
                   </FormControl>
                   <FormMessage />
@@ -169,7 +169,7 @@ export default function UserForm({ brands }: UserFormProps) {
               )}
             />
 
-            <Button type="submit">Create User</Button>
+            <Button type="submit">Créer l&apos;utilisateur</Button>
           </form>
         </Form>
       </CardContent>

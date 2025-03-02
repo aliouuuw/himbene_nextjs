@@ -58,9 +58,9 @@ export default async function InfographeHomePage() {
     return (
         <div className="h-full space-y-6 p-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Infographe Dashboard</h1>
-                <p className="text-muted-foreground">
-                    Manage your posts and create new content
+                <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
+                <p className="text-muted-foreground text-sm pt-3">
+                    Gérer vos posts et créer du contenu
                 </p>
             </div>
             <Separator />
@@ -71,19 +71,19 @@ export default async function InfographeHomePage() {
                         <div className="flex items-center justify-between mb-4">
                             <TabsList className="bg-background">
                                 <TabsTrigger value="all" className="relative">
-                                    All Posts
+                                    Tous les posts
                                     <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
                                         {posts.length}
                                     </span>
                                 </TabsTrigger>
                                 <TabsTrigger value="drafts">
-                                    Drafts
+                                    Brouillons
                                     <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
                                         {posts.filter(post => post.status === "DRAFT").length}
                                     </span>
                                 </TabsTrigger>
                                 <TabsTrigger value="published">
-                                    Published
+                                    Publiés
                                     <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
                                         {posts.filter(post => post.status === "PUBLISHED").length}
                                     </span>

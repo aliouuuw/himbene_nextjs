@@ -13,7 +13,7 @@ export function CreatePostButton({ currencies, brands, colors, sizes }: { curren
         <>
             <Button onClick={() => setOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Post
+                Créer un post
             </Button>
             <CreatePostDialog 
                 open={open} 

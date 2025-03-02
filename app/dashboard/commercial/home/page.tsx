@@ -33,9 +33,9 @@ export default async function CommercialHomePage() {
     return (
         <div className="space-y-8 p-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Commercial Dashboard</h1>
-                <p className="text-muted-foreground">
-                    Manage your posts, share or publish them
+                <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
+                <p className="text-muted-foreground text-sm pt-3">
+                    Gérer vos posts, partager ou publier
                 </p>
             </div>
             <Separator />
@@ -44,13 +44,13 @@ export default async function CommercialHomePage() {
                 <Tabs defaultValue="to-share" className="w-full">
                     <TabsList className="bg-background">
                         <TabsTrigger value="to-share">
-                            To Share
+                            À partager
                             <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
                                 {unsharedPosts.length}
                             </span>
                         </TabsTrigger>
                         <TabsTrigger value="shared">
-                            Shared
+                            Partagés
                             <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
                                 {sharedPosts.length}
                             </span>

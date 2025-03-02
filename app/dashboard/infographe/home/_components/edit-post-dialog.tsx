@@ -72,11 +72,11 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Post</DialogTitle>
+          <DialogTitle>Modifier le post</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="wigName">Wig Name</Label>
+            <Label htmlFor="wigName">Nom de la perruque</Label>
             <Input
               id="wigName"
               value={formData.wigName}
@@ -85,7 +85,7 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wigDescription">Description / Post Content</Label>
+            <Label htmlFor="wigDescription">Description / Contenu du post</Label>
             <Textarea
               id="wigDescription"
               value={formData.wigDescription}
@@ -96,7 +96,7 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="basePrice">Base Price</Label>
+              <Label htmlFor="basePrice">Prix local</Label>
               <Input
                 id="basePrice"
                 type="number"
@@ -106,7 +106,7 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">Devise</Label>
               <select
                 id="currency"
                 value={formData.currencyId}
@@ -124,10 +124,10 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>

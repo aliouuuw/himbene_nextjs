@@ -104,17 +104,41 @@ export async function getAdminPosts(): Promise<{ success: boolean; data?: PostWi
     }
 
     const posts = await prismaClient.post.findMany({
+      where: {
+        status: {
+          in: [PostStatus.DRAFT, PostStatus.PENDING]
+        },
+      },
       include: {
-        user: true,
-        brand: true,
-        wig: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+        brand: {
+          select: {
+            name: true,
+          },
+        },
+        wig: {
+          include: {
+            color: true,
+            size: true,
+            currency: true,
+          },
+        },
+        sharedBy: true,
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
 
     return { success: true, data: posts as unknown as PostWithRelations[] };
   } catch (error) {
-    console.error("Failed to fetch admin posts:", error);
-    return { success: false, error: "Failed to fetch admin posts" };
+    console.error("Error fetching posts:", error);
+    return { success: false, error: "Failed to fetch posts" };
   }
 }
 

@@ -47,7 +47,7 @@ export function BrandDialog({ mode, brand, onSuccess, trigger }: BrandDialogProp
         : await updateBrand(brand!.id, { name, description, logoUrl, isActive });
 
       if (result.success) {
-        toast.success(`Brand ${mode === "add" ? "created" : "updated"} successfully`);
+        toast.success(`Marque ${mode === "add" ? "créée" : "modifiée"} avec succès`);
         setOpen(false);
         onSuccess?.();
       } else {
@@ -55,7 +55,7 @@ export function BrandDialog({ mode, brand, onSuccess, trigger }: BrandDialogProp
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save brand");
+      toast.error("Erreur lors de l'enregistrement de la marque");
     } finally {
       setLoading(false);
     }
@@ -65,21 +65,21 @@ export function BrandDialog({ mode, brand, onSuccess, trigger }: BrandDialogProp
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || <Button variant={mode === "edit" ? "ghost" : "default"}>
-          {mode === "add" ? "Add Brand" : "Edit"}
+          {mode === "add" ? "Ajouter une marque" : "Modifier"}
         </Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add New Brand" : "Edit Brand"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Ajouter une marque" : "Modifier la marque"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Nom</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter brand name"
+              placeholder="Entrez le nom de la marque"
               required
             />
           </div>
@@ -89,7 +89,7 @@ export function BrandDialog({ mode, brand, onSuccess, trigger }: BrandDialogProp
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter brand description"
+              placeholder="Entrez la description de la marque"
             />
           </div>
           <div className="space-y-2">
@@ -98,7 +98,7 @@ export function BrandDialog({ mode, brand, onSuccess, trigger }: BrandDialogProp
               id="logoUrl"
               value={logoUrl}
               onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="Enter logo URL"
+              placeholder="Entrez l'URL du logo"
             />
           </div>
           <div className="flex items-center space-x-2">
@@ -107,14 +107,14 @@ export function BrandDialog({ mode, brand, onSuccess, trigger }: BrandDialogProp
               checked={isActive}
               onCheckedChange={setIsActive}
             />
-            <Label htmlFor="isActive">Active</Label>
+            <Label htmlFor="isActive">Actif</Label>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save"}
+              {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>

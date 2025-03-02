@@ -19,7 +19,7 @@ export function CreatePostDialog({ open, onOpenChange, currencies, brands, color
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Create New Post</DialogTitle>
+                    <DialogTitle>Créer un nouveau post</DialogTitle>
                 </DialogHeader>
                 <CreatePostForm 
                     brands={brands}

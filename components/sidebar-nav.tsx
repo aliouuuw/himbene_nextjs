@@ -38,12 +38,12 @@ export const navItems: NavItem[] = [
     children: [
       {
         href: "/dashboard/admin",
-        label: "Dashboard",
+        label: "Tableau de bord",
         icon: LayoutDashboard,
       },
       {
         href: "/dashboard/admin/users",
-        label: "Users",
+        label: "Utilisateurs",
         icon: User,
       },
       {
@@ -53,27 +53,27 @@ export const navItems: NavItem[] = [
       },
       {
         href: "/dashboard/admin/brands",
-        label: "Brands",
+        label: "Marques",
         icon: Building2,
       },
       {
         href: "/dashboard/admin/sizes",
-        label: "Sizes",
+        label: "Tailles",
         icon: Ruler,
       },
       {
         href: "/dashboard/admin/colors",
-        label: "Colors",
+        label: "Couleurs",
         icon: Palette,
       },
       {
         href: "/dashboard/admin/currencies",
-        label: "Currencies",
+        label: "Devises",
         icon: Currency,
       },
       {
         href: "/dashboard/admin/platforms",
-        label: "Platforms",
+        label: "Plateformes",
         icon: Globe,
         isDisabled: true,
       },
@@ -86,7 +86,7 @@ export const navItems: NavItem[] = [
     children: [
       {
         href: "/dashboard/infographe/home",
-        label: "Dashboard",
+        label: "Tableau de bord",
         icon: LayoutDashboard,
       },
     ],
@@ -99,12 +99,12 @@ export const navItems: NavItem[] = [
     children: [
       {
         href: "/dashboard/commercial/home",
-        label: "Dashboard",
+        label: "Tableau de bord",
         icon: LayoutDashboard,
       },
       {
         href: "/dashboard/commercial/platforms",
-        label: "Platforms",
+        label: "Plateformes",
         icon: Globe,
         isDisabled: true,
       },

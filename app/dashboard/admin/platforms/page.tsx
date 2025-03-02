@@ -42,16 +42,16 @@ export default function PlatformsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Platform Management</h1>
+        <h1 className="text-2xl font-bold">Gestion des plateformes</h1>
       </div>
 
       <Table>
-        <TableCaption>Configure social media platforms</TableCaption>
+        <TableCaption>Configurer les plateformes sociales</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Platform</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Enabled</TableHead>
+            <TableHead>Plateforme</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead>Activé</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -65,14 +65,14 @@ export default function PlatformsPage() {
               </TableCell>
               <TableCell>
                 <Badge variant={platform.isEnabled ? "default" : "secondary"}>
-                  {platform.isEnabled ? "Active" : "Disabled"}
+                  {platform.isEnabled ? "Activé" : "Désactivé"}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Switch checked={platform.isEnabled} />
               </TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="sm">Configure</Button>
+                <Button variant="ghost" size="sm">Configurer</Button>
               </TableCell>
             </TableRow>
           ))}

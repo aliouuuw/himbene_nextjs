@@ -42,7 +42,7 @@ export function SizeDialog({ mode, size, onSuccess, trigger }: SizeDialogProps) 
         : await updateWigSize(size!.id, name, description);
 
       if (result.success) {
-        toast.success(`Size ${mode === "add" ? "created" : "updated"} successfully`);
+        toast.success(`Taille ${mode === "add" ? "créée" : "modifiée"} avec succès`);
         setOpen(false);
         onSuccess?.();
       } else {
@@ -50,7 +50,7 @@ export function SizeDialog({ mode, size, onSuccess, trigger }: SizeDialogProps) 
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save size");
+      toast.error("Erreur lors de l'enregistrement de la taille");
     } finally {
       setLoading(false);
     }
@@ -60,21 +60,21 @@ export function SizeDialog({ mode, size, onSuccess, trigger }: SizeDialogProps) 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || <Button variant={mode === "edit" ? "ghost" : "default"}>
-          {mode === "add" ? "Add Size" : "Edit"}
+          {mode === "add" ? "Ajouter une taille" : "Modifier"}
         </Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add New Size" : "Edit Size"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Ajouter une taille" : "Modifier la taille"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Nom</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter size name"
+              placeholder="Entrez le nom de la taille"
               required
             />
           </div>
@@ -84,15 +84,15 @@ export function SizeDialog({ mode, size, onSuccess, trigger }: SizeDialogProps) 
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter size description"
+              placeholder="Entrez la description de la taille"
             />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save"}
+              {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>

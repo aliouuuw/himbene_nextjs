@@ -17,15 +17,15 @@ export function SizesList({ sizes }: { sizes: { id: string; name: string; descri
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Size Management</h1>
+        <h1 className="text-2xl font-bold">Gestion des tailles</h1>
         <SizeDialog mode="add" onSuccess={() => router.refresh()} />
       </div>
 
       <Table>
-        <TableCaption>A list of all wig sizes</TableCaption>
+        <TableCaption>Liste de toutes les tailles de perruque</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
+            <TableHead>Nom</TableHead>
             <TableHead>Description</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -43,7 +43,7 @@ export function SizesList({ sizes }: { sizes: { id: string; name: string; descri
                 />
                 <DeleteAlert 
                   onConfirm={() => handleDelete(size.id)}
-                  description="This will permanently delete this size and cannot be undone."
+                  description="Cette action est irréversible. Cela supprimera définitivement la taille et ne pourra pas être annulée."
                 />
               </TableCell>
             </TableRow>

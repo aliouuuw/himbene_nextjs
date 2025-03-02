@@ -20,7 +20,7 @@ export function CurrencyPreview({ baseCurrency, currencies }: CurrencyPreviewPro
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Test Amount ({baseCurrency})</Label>
+        <Label>Montant de test ({baseCurrency})</Label>
         <Input
           type="number"
           value={amount}

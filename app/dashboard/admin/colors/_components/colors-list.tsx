@@ -18,17 +18,17 @@ export function ColorsList({ colors }: { colors: { id: string; name: string; hex
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Color Management</h1>
+        <h1 className="text-2xl font-bold">Gestion des couleurs</h1>
         <ColorDialog mode="add" onSuccess={() => router.refresh()} />
       </div>
 
       <Table>
-        <TableCaption>A list of all wig colors</TableCaption>
+        <TableCaption>Liste de toutes les couleurs de perruque</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Color</TableHead>
-            <TableHead>Hex Code</TableHead>
+            <TableHead>Nom</TableHead>
+            <TableHead>Couleur</TableHead>
+            <TableHead>Code Hex</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -53,7 +53,7 @@ export function ColorsList({ colors }: { colors: { id: string; name: string; hex
                 />
                 <DeleteAlert 
                   onConfirm={() => handleDelete(color.id)}
-                  description="This will permanently delete this color and cannot be undone."
+                  description="Cette action est irréversible. Cela supprimera définitivement la couleur et ne pourra pas être annulée."
                 />
               </TableCell>
             </TableRow>

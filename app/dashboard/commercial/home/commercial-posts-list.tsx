@@ -33,16 +33,16 @@ export function CommercialPostsList({ posts, currencies }: Props) {
       : await markPostAsShared(postId);
     
     if (result.success) {
-      toast.success(isShared ? "Post unmarked as shared" : "Post marked as shared");
+      toast.success(isShared ? "Post désactivé comme partagé" : "Post activé comme partagé");
     } else {
-      toast.error(result.error || "Failed to update post share status");
+      toast.error(result.error || "Erreur lors de la mise à jour du statut de partage du post");
     }
   };
 
   if (posts.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
-        No posts available
+        Aucun post disponible
       </div>
     );
   }
@@ -53,12 +53,12 @@ export function CommercialPostsList({ posts, currencies }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>View</TableHead>
-              <TableHead>Brand</TableHead>
-              <TableHead>Wig</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Media</TableHead>
-              <TableHead>Mark as Shared</TableHead>
+              <TableHead>Voir</TableHead>
+              <TableHead>Marque</TableHead>
+              <TableHead>Perruque</TableHead>
+              <TableHead>Créé le</TableHead>
+              <TableHead>Médias</TableHead>
+              <TableHead>Marquer comme partagé</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

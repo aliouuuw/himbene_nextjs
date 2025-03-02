@@ -19,6 +19,7 @@ import {
   Currency
 } from "lucide-react";
 import prismaClient from "@/lib/prisma-client"; // Add this import for database access
+import { Separator } from "@/components/ui/separator";
 
 // This makes the component a Server Component that can fetch data
 export default async function AdminPage() {
@@ -33,53 +34,53 @@ export default async function AdminPage() {
 
   const managementSections = [
     {
-      title: "User Management",
-      description: "Manage user accounts and permissions",
+      title: "Utilisateurs",
+      description: "Gérer les comptes utilisateurs et leurs permissions",
       icon: Users,
       href: "/dashboard/admin/users",
-      count: `${userCount} ${userCount === 1 ? "User" : "Users"}`
+      count: `${userCount} ${userCount === 1 ? "Utilisateur" : "Utilisateurs"}`
     },
     {
-      title: "Post Management",
-      description: "Monitor all posts across the platform",
+      title: "Posts",
+      description: "Surveiller tous les posts sur la plateforme",
       icon: PenTool,
       href: "/dashboard/admin/posts",
       count: `${postCount} ${postCount === 1 ? "Post" : "Posts"}`
     },
     {
-      title: "Brand Management",
-      description: "Manage wig brands and their details",
+      title: "Marques",
+      description: "Gérer les marques et leurs détails",
       icon: Building2,
       href: "/dashboard/admin/brands",
-      count: `${brandCount} ${brandCount === 1 ? "Brand" : "Brands"}`
+      count: `${brandCount} ${brandCount === 1 ? "Marque" : "Marques"}`
     },
     {
-      title: "Color Management",
-      description: "Manage wig colors",
+      title: "Couleurs",
+      description: "Gérer les couleurs des cheveux",
       icon: Palette,
       href: "/dashboard/admin/colors",
-      count: `${colorCount} ${colorCount === 1 ? "Color" : "Colors"}`
+      count: `${colorCount} ${colorCount === 1 ? "Couleur" : "Couleurs"}`
     },
     {
-      title: "Size Management",
-      description: "Manage wig sizes",
+      title: "Tailles",
+      description: "Gérer les tailles des cheveux",
       icon: Ruler,
       href: "/dashboard/admin/sizes",
-      count: `${sizeCount} ${sizeCount === 1 ? "Size" : "Sizes"}`
+      count: `${sizeCount} ${sizeCount === 1 ? "Taille" : "Tailles"}`
     },
     {
-      title: "Currency Management",
-      description: "Manage currencies and exchange rates",
+      title: "Devises",
+      description: "Gérer les devises et les taux de change",
       icon: Currency,
       href: "/dashboard/admin/currencies",
-      count: `${currencyCount} ${currencyCount === 1 ? "Currency" : "Currencies"}`
+      count: `${currencyCount} ${currencyCount === 1 ? "Devise" : "Devises"}`
     },
     {
-      title: "Platform Management",
-      description: "Configure social media platforms",
+      title: "Plateformes",
+      description: "Configurer les plateformes sociales",
       icon: Share2,
       href: "/dashboard/admin/platforms",
-      count: `${platformCount} ${platformCount === 1 ? "Platform" : "Platforms"}`,
+      count: `${platformCount} ${platformCount === 1 ? "Plateforme" : "Plateformes"}`,
       isDisabled: true
     },
   ];
@@ -87,18 +88,21 @@ export default async function AdminPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage all aspects of your social media posting platform
+        <h1 className="text-2xl font-bold">Tableau de bord</h1>
+        <p className="text-muted-foreground text-sm pt-3">
+          Gérer tous les aspects de votre plateforme de publication sur les réseaux sociaux
         </p>
       </div>
+
+      <Separator />
+
         <Table>
-          <TableCaption>A list of all management sections</TableCaption>
+          <TableCaption>Liste de toutes les sections de gestion</TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead>Section</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Statut</TableHead>
               <TableHead className="w-[100px]">Action</TableHead>
             </TableRow>
           </TableHeader>

@@ -150,10 +150,10 @@ export function CreatePostForm({
     <form onSubmit={handleSubmit} className="space-y-6">
 
       <div className="space-y-4 border rounded-lg p-4 ">
-        <h3 className="font-medium">Wig Information</h3>
+        <h3 className="font-medium">Informations sur la perruque</h3>
         
         <div className="space-y-2">
-          <Label htmlFor="wigName">Wig Name</Label>
+            <Label htmlFor="wigName">Nom de la perruque</Label>
           <input
             type="text"
             id="wigName"
@@ -165,7 +165,7 @@ export function CreatePostForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="wigDescription">Description / Post Content</Label>
+          <Label htmlFor="wigDescription">Description / Contenu du post</Label>
           <Textarea
             id="wigDescription"
             value={wigData.description}
@@ -175,7 +175,7 @@ export function CreatePostForm({
           />
         </div>
         <div className="space-y-2">
-        <Label htmlFor="brand">Select Brand</Label>
+        <Label htmlFor="brand">Sélectionner une marque</Label>
         <Select
           value={selectedBrand}
           onValueChange={setSelectedBrand}
@@ -195,7 +195,7 @@ export function CreatePostForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="wigPrice">Price</Label>
+            <Label htmlFor="wigPrice">Prix local</Label>
             <div className="flex gap-2">
               <input
                 type="number"
@@ -226,7 +226,7 @@ export function CreatePostForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wigColor">Color</Label>
+            <Label htmlFor="wigColor">Couleur</Label>
             <Select
               value={wigData.colorId}
               onValueChange={(value) => handleWigDataChange('colorId', value)}
@@ -245,7 +245,7 @@ export function CreatePostForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wigSize">Size</Label>
+            <Label htmlFor="wigSize">Taille</Label>
             <Select
               value={wigData.sizeId}
               onValueChange={(value) => handleWigDataChange('sizeId', value)}
@@ -266,7 +266,7 @@ export function CreatePostForm({
       </div>
 
       <div className="space-y-2">
-        <Label>Upload Media</Label>
+        <Label>Télécharger des médias</Label>
         <div
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-4 cursor-pointer ${
@@ -275,7 +275,7 @@ export function CreatePostForm({
         >
           <input {...getInputProps()} />
           <p className="text-center text-sm text-gray-600">
-            Drag & drop files here, or click to select files
+            Glissez-déposez des fichiers ici, ou cliquez pour sélectionner des fichiers
           </p>
         </div>
 
@@ -312,7 +312,7 @@ export function CreatePostForm({
       </div>
 
       <div className="space-y-2">
-        <Label>Schedule For (Optional)</Label>
+        <Label>Planifier pour (Optionnel)</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -321,7 +321,7 @@ export function CreatePostForm({
               type="button"
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, 'PPP') : <span>Pick a date</span>}
+              {date ? format(date, 'PPP') : <span>Choisir une date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
@@ -340,7 +340,7 @@ export function CreatePostForm({
         disabled={isSubmitting} 
         className="w-full"
       >
-        {isSubmitting ? 'Creating Draft...' : 'Create Draft Post'}
+        {isSubmitting ? 'Création du post...' : 'Créer le post'}
       </Button>
     </form>
   );

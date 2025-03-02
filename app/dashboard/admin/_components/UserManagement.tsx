@@ -13,12 +13,12 @@ export default async function UserManagement() {
   return (
     <div className="w-full space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-4">Create User</h2>
+        <h2 className="text-xl font-semibold mb-4">Créer un utilisateur</h2>
         <UserForm brands={brands} />
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold mb-4">Users</h2>
+        <h2 className="text-xl font-semibold mb-4">Utilisateurs</h2>
         <UserList users={users} brands={brands} />
       </div>
     </div>

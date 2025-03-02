@@ -20,7 +20,7 @@ export function PostDetailsDialog({ post, currencies, open, onOpenChange, showSh
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Post Details</DialogTitle>
+          <DialogTitle>Post commercial</DialogTitle>
         </DialogHeader>
         
         <PostCard post={post} currencies={currencies} variant="default" showActions={false} showShareButtons={showShareButtons}/>

@@ -23,10 +23,10 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
   const handleDelete = async (id: string) => {
     const result = await deleteCurrency(id);
     if (result.success) {
-      console.log("Currency deleted successfully");
+      console.log("Devise supprimée avec succès");
       router.refresh();
     } else {
-      console.error(result.error || "Failed to delete currency");
+      console.error(result.error || "Erreur lors de la suppression de la devise");
     }
   };
 
@@ -35,7 +35,7 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
     try {
       const result = await syncExchangeRates();
       if (result.success) {
-        toast.success("Exchange rates updated successfully");
+        toast.success("Taux de change mis à jour avec succès");
         router.refresh();
       } else {
         toast.error(result.error);
@@ -50,8 +50,8 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Currency Management</h1>
-        <div className="space-x-2">
+        <h1 className="text-2xl font-bold">Gestion des devises</h1>
+        <div className="flex space-x-2">
           <Button 
             variant="outline" 
             onClick={handleSync}
@@ -62,22 +62,22 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
             ) : (
               <RefreshCw className="h-4 w-4 mr-2" />
             )}
-            Sync Rates
+            Actualiser les taux
           </Button>
           <CurrencyDialog mode="add" onSuccess={() => router.refresh()} />
         </div>
       </div>
 
       <Table>
-        <TableCaption>A list of all currencies</TableCaption>
+        <TableCaption>Liste de toutes les devises</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead>Code</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Symbol</TableHead>
-            <TableHead>Rate</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Last Updated</TableHead>
+            <TableHead>Nom</TableHead>
+            <TableHead>Symbole</TableHead>
+            <TableHead>Taux</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead>Dernière mise à jour</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -90,7 +90,7 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
               <TableCell>{currency.rate.toString()}</TableCell>
               <TableCell>
                 <Badge variant={currency.isBase ? "default" : "outline"}>
-                  {currency.isBase ? "Base Currency" : "Active"}
+                  {currency.isBase ? "Devise de base" : "Active"}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -108,7 +108,7 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
                 {!currency.isBase && (
                   <DeleteAlert 
                     onConfirm={() => handleDelete(currency.id)}
-                    description="This will permanently delete this currency and cannot be undone."
+                    description="Cette action est irréversible. Cela supprimera définitivement la devise et ne pourra pas être annulée."
                   />
                 )}
               </TableCell>
@@ -119,7 +119,7 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
 
       {baseCurrency && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Currency Preview</h2>
+          <h2 className="text-lg font-semibold mb-4">Conversion des devises</h2>
           <CurrencyPreview
             baseCurrency={baseCurrency.id}
             currencies={currencies.map(c => ({
