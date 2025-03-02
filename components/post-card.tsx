@@ -50,7 +50,7 @@ export function PostCard({
   const isDashboard = pathname.includes("/dashboard");
 
   return (
-    <Card className="overflow-hidden border-none">
+    <Card className="overflow-hidden border-none max-w-2xl">
       <CardHeader className="space-y-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-wrap">

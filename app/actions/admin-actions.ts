@@ -175,11 +175,6 @@ export async function getWigSizes() {
 }
 
 export async function getCurrencies() {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
 
   const currencies = await prismaClient.currency.findMany({
     orderBy: {
