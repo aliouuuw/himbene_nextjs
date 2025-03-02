@@ -39,7 +39,6 @@ export function CreatePostForm({
   sizes,
   currencies,
 }: CreatePostFormProps) {
-  const [content, setContent] = useState('');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [files, setFiles] = useState<File[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>('');
@@ -113,7 +112,7 @@ export function CreatePostForm({
       }
 
       const result = await createDraftPost({
-        content,
+        content: wigData.description,
         mediaUrls,
         scheduledFor: date,
         brandId: selectedBrand,
@@ -125,7 +124,6 @@ export function CreatePostForm({
       
       if (result.success) {
         toast.success('Draft post created successfully');
-        setContent('');
         setFiles([]);
         setDate(new Date());
         setWigData({
@@ -136,6 +134,7 @@ export function CreatePostForm({
           sizeId: '',
           currencyId: currencies[0]?.id || '',
         });
+        setSelectedBrand('');
       } else {
         toast.error(result.error);
       }
@@ -166,12 +165,13 @@ export function CreatePostForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="wigDescription">Description</Label>
+          <Label htmlFor="wigDescription">Description / Post Content</Label>
           <Textarea
             id="wigDescription"
             value={wigData.description}
             onChange={(e) => handleWigDataChange('description', e.target.value)}
             className="min-h-[100px]"
+            required
           />
         </div>
         <div className="space-y-2">
@@ -263,18 +263,6 @@ export function CreatePostForm({
             </Select>
           </div>
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="content">Post Content</Label>
-        <Textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Write your post content here..."
-          className="min-h-[100px]"
-          required
-        />
       </div>
 
       <div className="space-y-2">

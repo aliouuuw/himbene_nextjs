@@ -61,7 +61,7 @@ export async function createDraftPost(input: CreatePostInput) {
     const wig = await prismaClient.wig.create({
       data: {
         name: input.wigData.name,
-        description: input.wigData.description,
+        description: input.content,
         basePrice: input.wigData.basePrice,
         colorId: input.wigData.colorId,
         sizeId: input.wigData.sizeId,
@@ -87,6 +87,7 @@ export async function createDraftPost(input: CreatePostInput) {
 
     revalidatePath('/dashboard/commercial/home');
     revalidatePath('/dashboard/admin');
+    revalidatePath('/dashboard/infographe/home');
     
     return { success: true, data: post };
   } catch (error) {
@@ -395,6 +396,24 @@ export async function updatePost(postId: string, data: {
       return { success: false, error: "Not authorized to update this post" };
     }
 
+    // If content is being updated, make sure it syncs to the wig description
+    if (data.content && data.wigData) {
+      data.wigData.description = data.content;
+    } else if (data.content && post.wig) {
+      // If no wigData provided but content updated, update wig description separately
+      await prismaClient.wig.update({
+        where: { id: post.wig.id },
+        data: {
+          description: data.content
+        }
+      });
+    }
+    
+    // If wigData has description without content update, sync that to post content
+    if (data.wigData?.description && !data.content) {
+      data.content = data.wigData.description;
+    }
+
     // Update wig if wigData is provided
     if (data.wigData && post.wig) {
       await prismaClient.wig.update({
@@ -439,6 +458,7 @@ export async function updatePost(postId: string, data: {
     };
 
     revalidatePath('/dashboard/infographe/home');
+    revalidatePath('/dashboard/commercial/home');
     return { success: true, data: serializedPost };
   } catch (error) {
     console.error("Failed to update post:", error);

@@ -85,7 +85,7 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wigDescription">Description</Label>
+            <Label htmlFor="wigDescription">Description / Post Content</Label>
             <Textarea
               id="wigDescription"
               value={formData.wigDescription}
