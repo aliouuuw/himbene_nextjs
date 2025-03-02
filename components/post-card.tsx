@@ -14,6 +14,7 @@ import {
   PinterestIcon,
 } from "next-share";
 import { Button } from "./ui/button";
+import { usePathname } from "next/navigation";
 
 interface PostCardProps {
   post: PostWithRelations;
@@ -44,6 +45,9 @@ export function PostCard({
 
   const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/posts/${post.id}` || "";
 
+  const pathname = usePathname();
+  const isDashboard = pathname.includes("/dashboard");
+
   return (
     <Card className="overflow-hidden border-none">
       <CardHeader className="space-y-1">
@@ -53,9 +57,11 @@ export function PostCard({
               {post.wig?.name}
             </CardTitle>
           </div>
-          <Badge variant="outline" className="text-xs">
-            {post.status}
-          </Badge>
+          {!isDashboard && (
+            <Badge variant="outline" className="text-xs">
+              {post.status}
+            </Badge>
+          )}
         </div>
       </CardHeader>
 
