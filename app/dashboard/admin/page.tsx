@@ -14,64 +14,76 @@ import {
   PenTool, 
   Palette, 
   Ruler, 
-  DollarSign,
   Building2,
-  ArrowRight
+  ArrowRight,
+  Currency
 } from "lucide-react";
+import prismaClient from "@/lib/prisma-client"; // Add this import for database access
 
-const managementSections = [
-  {
-    title: "User Management",
-    description: "Manage user accounts and permissions",
-    icon: Users,
-    href: "/dashboard/admin/users",
-    count: "23 Users" // You can make these dynamic later
-  },
-  {
-    title: "Brand Management",
-    description: "Manage wig brands and their details",
-    icon: Building2,
-    href: "/dashboard/admin/brands",
-    count: "8 Brands"
-  },
-  {
-    title: "Platform Management",
-    description: "Configure social media platforms",
-    icon: Share2,
-    href: "/dashboard/admin/platforms",
-    count: "4 Platforms"
-  },
-  {
-    title: "Post Overview",
-    description: "Monitor all posts across the platform",
-    icon: PenTool,
-    href: "/dashboard/admin/posts",
-    count: "156 Posts"
-  },
-  {
-    title: "Color Management",
-    description: "Manage wig colors",
-    icon: Palette,
-    href: "/dashboard/admin/colors",
-    count: "12 Colors"
-  },
-  {
-    title: "Size Management",
-    description: "Manage wig sizes",
-    icon: Ruler,
-    href: "/dashboard/admin/sizes",
-    count: "5 Sizes"
-  },
-  {
-    title: "Currency Management",
-    description: "Manage currencies and exchange rates",
-    icon: DollarSign,
-    href: "/dashboard/admin/currencies",
-    count: "3 Currencies"
-  },
-];
+// This makes the component a Server Component that can fetch data
+export default async function AdminPage() {
+  // Fetch all the counts from the database
+  const userCount = await prismaClient.user.count();
+  const brandCount = await prismaClient.brand.count();
+  const platformCount = await prismaClient.platformConnection.count();
+  const postCount = await prismaClient.post.count();
+  const colorCount = await prismaClient.wigColor.count();
+  const sizeCount = await prismaClient.wigSize.count();
+  const currencyCount = await prismaClient.currency.count();
 
-export default function AdminPage() {
+  const managementSections = [
+    {
+      title: "User Management",
+      description: "Manage user accounts and permissions",
+      icon: Users,
+      href: "/dashboard/admin/users",
+      count: `${userCount} ${userCount === 1 ? "User" : "Users"}`
+    },
+    {
+      title: "Post Management",
+      description: "Monitor all posts across the platform",
+      icon: PenTool,
+      href: "/dashboard/admin/posts",
+      count: `${postCount} ${postCount === 1 ? "Post" : "Posts"}`
+    },
+    {
+      title: "Brand Management",
+      description: "Manage wig brands and their details",
+      icon: Building2,
+      href: "/dashboard/admin/brands",
+      count: `${brandCount} ${brandCount === 1 ? "Brand" : "Brands"}`
+    },
+    {
+      title: "Color Management",
+      description: "Manage wig colors",
+      icon: Palette,
+      href: "/dashboard/admin/colors",
+      count: `${colorCount} ${colorCount === 1 ? "Color" : "Colors"}`
+    },
+    {
+      title: "Size Management",
+      description: "Manage wig sizes",
+      icon: Ruler,
+      href: "/dashboard/admin/sizes",
+      count: `${sizeCount} ${sizeCount === 1 ? "Size" : "Sizes"}`
+    },
+    {
+      title: "Currency Management",
+      description: "Manage currencies and exchange rates",
+      icon: Currency,
+      href: "/dashboard/admin/currencies",
+      count: `${currencyCount} ${currencyCount === 1 ? "Currency" : "Currencies"}`
+    },
+    {
+      title: "Platform Management",
+      description: "Configure social media platforms",
+      icon: Share2,
+      href: "/dashboard/admin/platforms",
+      count: `${platformCount} ${platformCount === 1 ? "Platform" : "Platforms"}`,
+      isDisabled: true
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -92,7 +104,7 @@ export default function AdminPage() {
           </TableHeader>
           <TableBody>
             {managementSections.map((section) => (
-              <TableRow key={section.href}>
+              <TableRow key={section.href} className={section.isDisabled ? "opacity-50 cursor-not-allowed" : ""}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     <section.icon className="h-4 w-4" />
@@ -102,8 +114,8 @@ export default function AdminPage() {
                 <TableCell>{section.description}</TableCell>
                 <TableCell>{section.count}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm" asChild>
-                    <a href={section.href}>
+                  <Button disabled={section.isDisabled} variant="ghost" size="sm" asChild>
+                    <a href={section.href} className={section.isDisabled ? "pointer-events-none" : ""}>
                       <ArrowRight className="h-4 w-4" />
                     </a>
                   </Button>

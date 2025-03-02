@@ -12,7 +12,10 @@ import {
   LayoutDashboard,
   Globe,
   User,
-  Home,
+  Palette,
+  Ruler,
+  Building2,
+  Currency,
 } from "lucide-react";
 import { useState } from "react";
 import { UserRole } from "@prisma/client";
@@ -23,6 +26,7 @@ export type NavItem = {
   icon: React.ElementType;
   children?: NavItem[];
   roles?: UserRole[];
+  isDisabled?: boolean;
 };
 
 export const navItems: NavItem[] = [
@@ -48,9 +52,30 @@ export const navItems: NavItem[] = [
         icon: PenTool,
       },
       {
+        href: "/dashboard/admin/brands",
+        label: "Brands",
+        icon: Building2,
+      },
+      {
+        href: "/dashboard/admin/sizes",
+        label: "Sizes",
+        icon: Ruler,
+      },
+      {
+        href: "/dashboard/admin/colors",
+        label: "Colors",
+        icon: Palette,
+      },
+      {
+        href: "/dashboard/admin/currencies",
+        label: "Currencies",
+        icon: Currency,
+      },
+      {
         href: "/dashboard/admin/platforms",
         label: "Platforms",
         icon: Globe,
+        isDisabled: true,
       },
     ],    
   },
@@ -61,8 +86,8 @@ export const navItems: NavItem[] = [
     children: [
       {
         href: "/dashboard/infographe/home",
-        label: "Accueil",
-        icon: Home,
+        label: "Dashboard",
+        icon: LayoutDashboard,
       },
     ],
     roles: ["ADMIN", "INFOGRAPHE"],
@@ -74,13 +99,14 @@ export const navItems: NavItem[] = [
     children: [
       {
         href: "/dashboard/commercial/home",
-        label: "Accueil",
-        icon: Home,
+        label: "Dashboard",
+        icon: LayoutDashboard,
       },
       {
         href: "/dashboard/commercial/platforms",
         label: "Platforms",
         icon: Globe,
+        isDisabled: true,
       },
     ],
     roles: ["ADMIN", "COMMERCIAL"],
@@ -143,11 +169,11 @@ export function SidebarNav({ userRole }: { userRole: UserRole | null }) {
                   asChild
                   variant={pathname === child.href ? "secondary" : "ghost"}
                   className="w-full justify-start"
-                  disabled={cannotAccess(userRole, item.roles ?? [])}
+                  disabled={cannotAccess(userRole, item.roles ?? []) || child.isDisabled}
                 >
-                  <Link href={child.href}>
-                    <child.icon className="mr-2 h-4 w-4" />
-                    {child.label}
+                  <Link href={child.href} className={child.isDisabled ? "pointer-events-none" : ""}>
+                    <child.icon className={`mr-2 h-4 w-4 ${child.isDisabled ? "opacity-50" : ""}`} />
+                    <p className={child.isDisabled ? "opacity-50" : ""}>{child.label}</p>
                   </Link>
                 </Button>
               ))}
@@ -163,7 +189,7 @@ export function SidebarNav({ userRole }: { userRole: UserRole | null }) {
         asChild
         variant={isActive ? "secondary" : "ghost"}
         className="w-full justify-start"
-        disabled={cannotAccess(userRole, item.roles)}
+        disabled={cannotAccess(userRole, item.roles) || item.isDisabled}
       >
         <Link
           href={item.href}
