@@ -1,6 +1,10 @@
 import { Post } from "@prisma/client";
 
 export type PostWithRelations = Post & {
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+  };
   brand: {
     name: string;
   };
@@ -8,21 +12,27 @@ export type PostWithRelations = Post & {
     id: string;
     name: string;
     description: string | null;
-    basePrice: number;  // Use number since this is likely what Prisma uses
+    basePrice: number;
     currencyId: string;
     color: {
       name: string;
-      hexCode: string | null;
     };
     size: {
       name: string;
-      description: string | null;
     };
     currency: {
+      id: string;
       symbol: string;
-      rate: string;
-      name: string;
+      rate: number;
     };
-    imageUrls: string[];
   } | null;
 }; 
+
+export type Currency = {
+  id: string;
+  symbol: string;
+  name: string;
+  rate: number;
+  isBase: boolean;
+  lastUpdated: Date;
+};

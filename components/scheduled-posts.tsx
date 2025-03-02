@@ -5,13 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 const scheduledPosts = [
   {
     id: 1,
-    content: "Check out our latest product!",
+    wigDescription: "Check out our latest product!",
     platforms: ["Facebook", "Twitter"],
     scheduledFor: "2023-06-01 09:00 AM",
   },
   {
     id: 2,
-    content: "Join us for a webinar on social media marketing",
+    wigDescription: "Join us for a webinar on social media marketing",
     platforms: ["LinkedIn"],
     scheduledFor: "2023-06-02 02:00 PM",
   },
@@ -28,7 +28,7 @@ export function ScheduledPosts() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Content</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Platforms</TableHead>
               <TableHead>Scheduled For</TableHead>
             </TableRow>
@@ -36,7 +36,7 @@ export function ScheduledPosts() {
           <TableBody>
             {scheduledPosts.map((post) => (
               <TableRow key={post.id}>
-                <TableCell>{post.content}</TableCell>
+                <TableCell>{post.wigDescription}</TableCell>
                 <TableCell>{post.platforms.join(", ")}</TableCell>
                 <TableCell>{post.scheduledFor}</TableCell>
               </TableRow>

@@ -1,53 +1,14 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
-import Image from "next/image";
-import {
-  FacebookShareButton,
-  TwitterShareButton,
-  LinkedinShareButton,
-  FacebookIcon,
-  TwitterIcon,
-  LinkedinIcon,
-  PinterestIcon,
-  PinterestShareButton,
-} from "next-share";
-import { Post as PrismaPost } from "@prisma/client";
-
-type PostWithRelations = PrismaPost & {
-  brand: {
-    name: string;
-  };
-  user: {
-    firstName: string | null;
-    lastName: string | null;
-  };
-  wig?: {
-    id: string;
-    name: string;
-    description: string | null;
-    basePrice: string;
-    currencyId: string;
-    currency: {
-      symbol: string;
-      rate: string;
-    };
-    color: {
-      name: string;
-    };
-    size: {
-      name: string;
-    };
-  } | null;
-};
+import { PostCard } from "@/components/post-card";
+import { Currency, PostWithRelations } from "@/types";
 
 interface Props {
   posts: PostWithRelations[];
   currencies: Array<{
     id: string;
     symbol: string;
-    rate: number;
+    rate: string | number;
     isBase: boolean;
   }>;
 }
@@ -61,137 +22,15 @@ export function DraftPostsList({ posts, currencies }: Props) {
     );
   }
 
-//   const formatShareContent = (post: PostWithRelations) => {
-//     const content = post.content;
-//     console.log(post);
-
-// //     if (post.wig) {
-// //       const wigInfo = `🎀 ${post.wig.name}
-// // ${post.wig.description || ""}
-// // Size: ${post.wig.size.name}
-// // Color: ${post.wig.color.name}
-
-// // `;
-// //       content = wigInfo + content;
-// //     }
-
-//     // Add brand hashtag
-//     //content += `\n\n#${post.brand.name.replace(/\s+/g, "")}`;
-
-//     return content;
-//   };
-
-  const formatCurrency = (amount: number, currency: { symbol: string, rate: number }) => {
-    const convertedAmount = (amount * currency.rate).toFixed(2);
-    return `${currency.symbol}${convertedAmount}`;
-  };
-
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {posts.map((post) => (
-        <Card key={post.id}>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-start">
-              <span className="text-sm font-medium">{post.brand.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {format(new Date(post.createdAt), "MMM d, yyyy")}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {post.wig && (
-              <div className="bg-muted p-3 rounded-md space-y-1">
-                <p className="font-medium">{post.wig.name}</p>
-                {post.wig.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {post.wig.description}
-                  </p>
-                )}
-                <div className="flex gap-2 text-sm">
-                  <span>Size: {post.wig.size.name}</span>
-                  <span>•</span>
-                  <span>Color: {post.wig.color.name}</span>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">
-                    {formatCurrency(Number(post.wig.basePrice), {
-                      symbol: post.wig.currency.symbol,
-                      rate: Number(post.wig.currency.rate)
-                    })}
-                  </p>
-                  <div className="text-sm text-muted-foreground">
-                    {currencies
-                      .filter(curr => curr.id !== post.wig?.currencyId)
-                      .map(currency => (
-                        <p key={currency.id}>
-                          {formatCurrency(Number(post.wig?.basePrice || 0), currency)}
-                        </p>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <p className="text-sm">{post.content}</p>
-
-            {post.mediaUrls &&
-              Array.isArray(post.mediaUrls) &&
-              post.mediaUrls.length > 0 && (
-                <div
-                  className={`grid ${
-                    post.mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"
-                  } gap-2 bg-muted/50 rounded-md p-2`}
-                >
-                  {(post.mediaUrls as string[]).map((url, index) => (
-                    <div key={index} className="relative aspect-square">
-                      <Image
-                        src={url}
-                        alt={`Media ${index + 1}`}
-                        fill
-                        className="object-cover rounded-md"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-            {post.scheduledFor && (
-              <p className="text-xs text-muted-foreground">
-                Scheduled for: {format(new Date(post.scheduledFor), "PPP")}
-              </p>
-            )}
-
-            <p className="text-xs text-muted-foreground">
-              Created by: {post.user.firstName} {post.user.lastName}
-            </p>
-
-            <div className="flex gap-2 pt-4">
-              <FacebookShareButton
-                url={process.env.NEXT_PUBLIC_APP_URL + "/posts/" + post.id || ""}
-              >
-                <FacebookIcon size={32} round />
-              </FacebookShareButton>
-
-              <TwitterShareButton
-                url={process.env.NEXT_PUBLIC_APP_URL + "/posts/" + post.id || ""}
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-
-              <LinkedinShareButton
-                url={process.env.NEXT_PUBLIC_APP_URL + "/posts/" + post.id || ""}
-              >
-                <LinkedinIcon size={32} round />
-              </LinkedinShareButton>
-              <PinterestShareButton
-                url={process.env.NEXT_PUBLIC_APP_URL + "/posts/" + post.id || ""}
-                media={(post.mediaUrls as string[])?.[0] || ""}
-              >
-                <PinterestIcon size={32} round />
-              </PinterestShareButton>
-            </div>
-          </CardContent>
-        </Card>
+        <PostCard
+          key={post.id}
+          post={post}
+          currencies={currencies as Currency[]}
+          variant="default"
+        />
       ))}
     </div>
   );

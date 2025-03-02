@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import prismaClient from "@/lib/prisma-client";
 import { Post, PostStatus, UserRole } from "@prisma/client";
+import { getAuthenticatedUserFromDb } from "@/lib/auth";
 
 export type CreatePostInput = {
   content: string;
@@ -123,17 +124,26 @@ export async function getCommercialDraftPosts(): Promise<{ success: boolean; dat
       return { success: false, error: "Unauthorized" };
     }
 
-    // Get posts in draft that are associated with the user's brand or the user is an infographe
+    // Get posts in draft that are associated with the user's brand or the user is an admin
     const posts = await prismaClient.post.findMany({
       where: {
         status: PostStatus.DRAFT,
-        brand: {
-          users: {
-            some: {
-              userId: userId,
+        OR: [
+          {
+            brand: {
+              users: {
+                some: {
+                  userId: userId,
+                },
+              },
             },
           },
-        },
+          {
+            user: {
+              role: UserRole.ADMIN
+            }
+          }
+        ],
       },
       include: {
         user: true,
@@ -174,29 +184,79 @@ export async function getCommercialDraftPosts(): Promise<{ success: boolean; dat
   }
 }
 
-
 export async function getInfographePosts(): Promise<{ success: boolean; data?: PostWithRelations[]; error?: string }> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const currentUser = await getAuthenticatedUserFromDb();
+    if (!currentUser) {
       return { success: false, error: "Unauthorized" };
     }
 
+    // If admin, allow viewing all infographe posts
     const posts = await prismaClient.post.findMany({
       where: {
         status: PostStatus.DRAFT,
-        user: {
-          role: UserRole.INFOGRAPHE,
-        },
+        OR: [
+          {
+            // Posts created by the current user if they're an infographe
+            userId: currentUser.role === UserRole.INFOGRAPHE ? currentUser.id : undefined
+          },
+          {
+            // All infographe posts if user is admin
+            user: {
+              role: UserRole.ADMIN
+            }
+          }
+        ]
       },
       include: {
-        user: true,
-        brand: true,
-        wig: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          }
+        },
+        brand: {
+          select: {
+            name: true,
+          }
+        },
+        wig: {
+          include: {
+            color: {
+              select: { name: true }
+            },
+            size: {
+              select: { name: true }
+            },
+            currency: {
+              select: {
+                id: true,
+                symbol: true,
+                rate: true
+              }
+            },
+          }
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
 
-    return { success: true, data: posts as unknown as PostWithRelations[] };
+    const serializedPosts = posts.map(post => ({
+      ...post,
+      wig: post.wig ? {
+        ...post.wig,
+        basePrice: Number(post.wig.basePrice),
+        currency: {
+          id: post.wig.currency.id,
+          symbol: post.wig.currency.symbol,
+          rate: Number(post.wig.currency.rate)
+        }
+      } : null
+    }));
+
+    return { success: true, data: serializedPosts as unknown as PostWithRelations[] };
   } catch (error) {
     console.error("Failed to fetch infographe posts:", error);
     return { success: false, error: "Failed to fetch infographe posts" };
@@ -240,5 +300,124 @@ export async function getScheduledPosts(): Promise<{ success: boolean; data?: Po
   } catch (error) {
     console.error("Failed to fetch scheduled posts:", error);
     return { success: false, error: "Failed to fetch scheduled posts" };
+  }
+}
+
+export async function deletePost(postId: string) {
+  try {
+    const currentUser = await getAuthenticatedUserFromDb();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const post = await prismaClient.post.findUnique({
+      where: { id: postId },
+      include: { user: true }
+    });
+
+    if (!post) {
+      return { success: false, error: "Post not found" };
+    }
+
+    // Allow deletion if user is admin or the original creator
+    if (currentUser.role !== UserRole.ADMIN && post.userId !== currentUser.id) {
+      return { success: false, error: "Not authorized to delete this post" };
+    }
+
+    await prismaClient.post.delete({
+      where: { id: postId }
+    });
+
+    revalidatePath('/dashboard/infographe/home');
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete post:", error);
+    return { success: false, error: "Failed to delete post" };
+  }
+}
+
+export async function updatePost(postId: string, data: {
+  content?: string;
+  mediaUrls?: string[];
+  scheduledFor?: Date | null;
+  status?: PostStatus;
+  wigData?: {
+    name?: string;
+    description?: string;
+    basePrice?: number;
+    colorId?: string;
+    sizeId?: string;
+    currencyId?: string;
+    imageUrls?: string[];
+  };
+}) {
+  try {
+    const currentUser = await getAuthenticatedUserFromDb();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const post = await prismaClient.post.findUnique({
+      where: { id: postId },
+      include: { user: true, wig: true }
+    });
+
+    if (!post) {
+      return { success: false, error: "Post not found" };
+    }
+
+    // Allow updates if user is admin or the original creator
+    if (currentUser.role !== UserRole.ADMIN && post.userId !== currentUser.id) {
+      return { success: false, error: "Not authorized to update this post" };
+    }
+
+    // Update wig if wigData is provided
+    if (data.wigData && post.wig) {
+      await prismaClient.wig.update({
+        where: { id: post.wig.id },
+        data: data.wigData
+      });
+    }
+
+    // Update post
+    const updatedPost = await prismaClient.post.update({
+      where: { id: postId },
+      data: {
+        content: data.content,
+        mediaUrls: data.mediaUrls,
+        scheduledFor: data.scheduledFor,
+        status: data.status
+      },
+      include: {
+        user: true,
+        brand: true,
+        wig: {
+          include: {
+            color: true,
+            size: true,
+            currency: true
+          }
+        }
+      }
+    });
+
+    // Serialize Decimal values before returning
+    const serializedPost = {
+      ...updatedPost,
+      wig: updatedPost.wig ? {
+        ...updatedPost.wig,
+        basePrice: Number(updatedPost.wig.basePrice),
+        currency: {
+          ...updatedPost.wig.currency,
+          rate: Number(updatedPost.wig.currency.rate)
+        }
+      } : null
+    };
+
+    revalidatePath('/dashboard/infographe/home');
+    return { success: true, data: serializedPost };
+  } catch (error) {
+    console.error("Failed to update post:", error);
+    return { success: false, error: "Failed to update post" };
   }
 }

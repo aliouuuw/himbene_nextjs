@@ -1,6 +1,7 @@
 import { getCommercialDraftPosts } from "@/app/actions/post-actions";
 import { getCurrencies } from "@/app/actions/admin-actions";
-import { DraftPostsList } from "./DraftPostList";
+import { CommercialPostsList } from "./commercial-posts-list";
+import { PostWithRelations } from "@/types";
 
 export default async function CommercialHomePage() {
     const [postsResult, currencies] = await Promise.all([
@@ -32,8 +33,8 @@ export default async function CommercialHomePage() {
             <div className="space-y-4">
                 <h2 className="text-2xl font-semibold">Posts to Publish</h2>
                 {postsResult.success ? (
-                    <DraftPostsList 
-                        posts={convertedPosts || []} 
+                    <CommercialPostsList 
+                        posts={convertedPosts as PostWithRelations[] || []} 
                         currencies={currencies}
                     />
                 ) : (

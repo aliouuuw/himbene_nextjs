@@ -15,15 +15,7 @@ import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Brand, WigColor, WigSize } from '@prisma/client';
 import { useUploadThing } from '@/lib/uploadthing';
-
-type Currency = {
-  id: string;
-  name: string;
-  symbol: string;
-  rate: string;
-  isBase: boolean;
-  lastUpdated: Date;
-};
+import { Currency } from "@/types";
 
 type WigFormData = {
   name: string;
