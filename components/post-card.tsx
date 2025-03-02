@@ -190,7 +190,7 @@ export function PostCard({
                 </Button>
               )}
             </>
-          ) : showShareButtons ? (
+          ) : !showShareButtons ? (
             <></>
           ) : (
             <div className="space-y-2">
