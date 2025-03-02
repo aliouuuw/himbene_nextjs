@@ -26,6 +26,11 @@ export type PostWithRelations = Post & {
       rate: number;
     };
   } | null;
+  sharedBy?: {
+    userId: string;
+    sharedAt: Date;
+  }[];
+  isShared?: boolean;
 }; 
 
 export type Currency = {

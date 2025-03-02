@@ -2,7 +2,6 @@ import { getBrands, getCurrencies, getWigSizes, getWigColors } from "@/app/actio
 import { getInfographePosts } from "@/app/actions/post-actions";
 import { PostWithRelations, Currency } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { InfographePostsList } from "./_components/infographe-posts-list";
 import { CreatePostButton } from "./_components/create-post-button";
 import { Separator } from "@/components/ui/separator";
@@ -17,11 +16,10 @@ function PostsTabsContent({ value, posts, currencies, error }: { value: string, 
                     currencies={currencies}
                 />
             ) : (
-                <Card>
-                    <CardContent className="flex items-center justify-center h-32">
-                        <div className="text-red-500">{error}</div>
-                    </CardContent>
-                </Card>
+                <div className="flex items-center justify-center h-32">
+                    <div className="text-center py-10 text-muted-foreground">No posts available</div>
+                    <p className="text-red-500 text-sm">{error}</p>
+                </div>
             )}
         </TabsContent>
     );

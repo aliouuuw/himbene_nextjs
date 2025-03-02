@@ -124,7 +124,14 @@ export async function getCommercialDraftPosts(): Promise<{ success: boolean; dat
       return { success: false, error: "Unauthorized" };
     }
 
-    // Get posts in draft that are associated with the user's brand or the user is an admin
+    // First, get the IDs of posts that the user has shared
+    const sharedPostIds = await prismaClient.sharedPost.findMany({
+      where: { userId },
+      select: { postId: true }
+    });
+
+    const sharedIds = new Set(sharedPostIds.map(p => p.postId));
+
     const posts = await prismaClient.post.findMany({
       where: {
         status: PostStatus.DRAFT,
@@ -146,38 +153,55 @@ export async function getCommercialDraftPosts(): Promise<{ success: boolean; dat
         ],
       },
       include: {
-        user: true,
-        brand: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          }
+        },
+        brand: {
+          select: {
+            name: true,
+          }
+        },
         wig: {
           include: {
-            color: true,
-            size: true,
-            currency: true,
-          },
-        },
+            color: {
+              select: { name: true }
+            },
+            size: {
+              select: { name: true }
+            },
+            currency: {
+              select: {
+                id: true,
+                symbol: true,
+                rate: true
+              }
+            },
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    // Convert Decimal values to strings in wigs and currencies
     const serializedPosts = posts.map(post => ({
       ...post,
+      isShared: sharedIds.has(post.id),
       wig: post.wig ? {
         ...post.wig,
         basePrice: post.wig.basePrice.toString(),
         currency: {
-          ...post.wig.currency,
           id: post.wig.currency.id,
           symbol: post.wig.currency.symbol,
-          isBase: post.wig.currency.isBase,
-          rate: post.wig.currency.rate.toString(),
-        },
-      } : null,
+          rate: post.wig.currency.rate.toString()
+        }
+      } : null
     }));
 
-    return { success: true, data: serializedPosts as unknown as PostWithRelations[] };
+    return { success: true, data: serializedPosts };
   } catch (error) {
     console.error("Failed to fetch draft posts:", error);
     return { success: false, error: "Failed to fetch draft posts" };
@@ -419,5 +443,51 @@ export async function updatePost(postId: string, data: {
   } catch (error) {
     console.error("Failed to update post:", error);
     return { success: false, error: "Failed to update post" };
+  }
+}
+
+export async function markPostAsShared(postId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const sharedPost = await prismaClient.sharedPost.create({
+      data: {
+        postId,
+        userId,
+      },
+    });
+
+    revalidatePath('/dashboard/commercial/home');
+    return { success: true, data: sharedPost };
+  } catch (error) {
+    console.error("Failed to mark post as shared:", error);
+    return { success: false, error: "Failed to mark post as shared" };
+  }
+}
+
+export async function unmarkPostAsShared(postId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    await prismaClient.sharedPost.delete({
+      where: {
+        postId_userId: {
+          postId,
+          userId
+        }
+      },
+    });
+
+    revalidatePath('/dashboard/commercial/home');
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to unmark post as shared:", error);
+    return { success: false, error: "Failed to unmark post as shared" };
   }
 }

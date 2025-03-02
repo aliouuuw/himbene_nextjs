@@ -2,6 +2,8 @@ import { getCommercialDraftPosts } from "@/app/actions/post-actions";
 import { getCurrencies } from "@/app/actions/admin-actions";
 import { CommercialPostsList } from "./commercial-posts-list";
 import { PostWithRelations } from "@/types";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 
 export default async function CommercialHomePage() {
     const [postsResult, currencies] = await Promise.all([
@@ -9,37 +11,70 @@ export default async function CommercialHomePage() {
         getCurrencies()
     ]);
 
-    // Convert basePrice to number before passing to DraftPostsList
-    const convertedPosts = postsResult.success 
+    const convertedPosts = (postsResult.success 
       ? postsResult.data?.map(post => ({
           ...post,
-          brand: { ...post.brand },  // Ensure brand is included
+          brand: { ...post.brand },
           wig: post.wig ? {
             ...post.wig,
-            basePrice: post.wig.basePrice,  // Keep as string
+            basePrice: post.wig.basePrice,
             currency: {
               symbol: post.wig.currency.symbol,
-              rate: post.wig.currency.rate   // Keep as string
+              rate: post.wig.currency.rate
             }
           } : null
         }))
-      : [];
+      : []) as (PostWithRelations & { isShared: boolean })[];
+
+    // Filter posts based on shared status
+    const unsharedPosts = convertedPosts?.filter(post => !post.isShared) || [];
+    const sharedPosts = convertedPosts?.filter(post => post.isShared) || [];
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold">Commercial Dashboard</h1>
+        <div className="space-y-8 p-6">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Commercial Dashboard</h1>
+                <p className="text-muted-foreground">
+                    Manage your posts, share or publish them
+                </p>
             </div>
+            <Separator />
+            
             <div className="space-y-4">
-                <h2 className="text-2xl font-semibold">Posts to Publish</h2>
-                {postsResult.success ? (
-                    <CommercialPostsList 
-                        posts={convertedPosts as PostWithRelations[] || []} 
-                        currencies={currencies}
-                    />
-                ) : (
-                    <div className="text-red-500">{postsResult.error}</div>
-                )}
+                <Tabs defaultValue="to-share" className="w-full">
+                    <TabsList className="bg-background">
+                        <TabsTrigger value="to-share">
+                            To Share
+                            <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
+                                {unsharedPosts.length}
+                            </span>
+                        </TabsTrigger>
+                        <TabsTrigger value="shared">
+                            Shared
+                            <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
+                                {sharedPosts.length}
+                            </span>
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="to-share" className="m-0 pt-3">
+                        {postsResult.success ? (
+                            <CommercialPostsList 
+                                posts={unsharedPosts} 
+                                currencies={currencies}
+                            />
+                        ) : (
+                            <div className="text-red-500">{postsResult.error}</div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="shared" className="m-0 pt-3">
+                        <CommercialPostsList 
+                            posts={sharedPosts} 
+                            currencies={currencies}
+                        />
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );

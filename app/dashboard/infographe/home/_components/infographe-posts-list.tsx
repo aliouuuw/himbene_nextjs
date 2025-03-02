@@ -60,7 +60,7 @@ export function InfographePostsList({ posts, currencies }: Props) {
 
   return (
     <>
-      <div className="rounded-md border">
+      <div>
         <Table>
           <TableHeader>
             <TableRow>

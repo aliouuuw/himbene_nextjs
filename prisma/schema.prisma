@@ -76,6 +76,7 @@ model Post {
   updatedAt    DateTime @updatedAt
   
   platformPosts PlatformPost[]
+  sharedBy      SharedPost[]
 
   @@index([userId, brandId, status])
 }
@@ -201,4 +202,15 @@ model PendingUser {
   firstName String?
   lastName  String?
   createdAt DateTime @default(now())
+}
+
+model SharedPost {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  sharedAt  DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
 }
