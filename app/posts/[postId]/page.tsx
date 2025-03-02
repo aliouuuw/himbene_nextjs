@@ -6,9 +6,9 @@ import { getCurrencies } from "@/app/actions/admin-actions";
 import { PostCard } from "@/components/post-card";
 
 export async function generateMetadata(
-  { params }: { params: Promise<{ postId: string }> }
+  { params }: { params: { postId: string } }
 ): Promise<Metadata> {
-  const postId = (await params).postId;
+  const postId = params.postId;
   const post = await prismaClient.post.findUnique({
     where: { id: postId as string },
     include: {
