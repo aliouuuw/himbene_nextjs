@@ -3,7 +3,7 @@ import prismaClient from "@/lib/prisma-client";
 import { Metadata } from "next";
 import { PostWithRelations } from "@/types";
 import { getCurrencies } from "@/app/actions/admin-actions";
-import { PostCard } from "@/components/post-card";
+import { ClientPostDisplay } from "./client-post-display";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ postId: string }> }
@@ -68,6 +68,12 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
     prismaClient.post.findUnique({
       where: { id: postId as string },
       include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          }
+        },
         brand: true,
         wig: {
           include: {
@@ -85,29 +91,29 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
 
   const serializedPost = {
     ...post,
+    isShared: false,
+    user: post.user || { firstName: null, lastName: null },
     wig: post.wig ? {
       ...post.wig,
+      id: post.wig.id,
+      name: post.wig.name,
+      description: post.wig.description,
       basePrice: Number(post.wig.basePrice),
+      currencyId: post.wig.currencyId,
+      color: { name: post.wig.color.name },
+      size: { name: post.wig.size.name },
       currency: {
-        ...post.wig.currency,
+        id: post.wig.currency.id,
+        symbol: post.wig.currency.symbol,
         rate: Number(post.wig.currency.rate)
       },
     } : null,
-  } as unknown as PostWithRelations;
+    sharedBy: [],
+  } as PostWithRelations;
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-8">
-      <PostCard
-        post={serializedPost}
-        currencies={currencies}
-        variant="default"
-        showActions={false}
-      />
-      
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Additional Details</h2>
-        {/* Add any additional sections you want to show on the full page */}
-      </div>
+      <ClientPostDisplay post={serializedPost} currencies={currencies} />
     </div>
   );
 }
