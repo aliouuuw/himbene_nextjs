@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignUpButton, UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "./ui/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,6 +18,7 @@ export default function Header() {
           <UserButton />
         </SignedIn>
         <SignedOut>
+          <SignUpButton />
           <Button variant="ghost">
             <Link href="/sign-in">
               Se connecter

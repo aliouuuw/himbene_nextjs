@@ -84,7 +84,11 @@ export async function getUsers() {
     throw new Error('Unauthorized: Admin access required');
   }
 
-  return await prismaClient.user.findMany({
+  return prismaClient.user.findMany({
+    where: {
+      isActive: true,  // Only show active users
+      deletedAt: null  // And those that haven't been deleted
+    },
     include: {
       brands: {
         include: {
@@ -92,7 +96,9 @@ export async function getUsers() {
         }
       }
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: {
+      createdAt: 'desc'
+    }
   });
 }
 
