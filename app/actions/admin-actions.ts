@@ -110,11 +110,6 @@ export async function createBrand(data: BrandData) {
 }
 
 export async function getBrands() {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
 
   return await prismaClient.brand.findMany();
 }
@@ -147,11 +142,6 @@ export async function updateBrand(id: string, data: BrandData) {
 }
 
 export async function getWigColors() {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
 
   return await prismaClient.wigColor.findMany({
     orderBy: {
@@ -161,11 +151,6 @@ export async function getWigColors() {
 }
 
 export async function getWigSizes() {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
 
   return await prismaClient.wigSize.findMany({
     orderBy: {
@@ -505,12 +490,6 @@ export async function deleteUser(userId: string) {
 
 // Wig Quality Actions
 export async function getWigQualities() {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
-
   return await prismaClient.wigQuality.findMany({
     orderBy: {
       orderIndex: 'asc',
