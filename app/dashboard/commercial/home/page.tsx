@@ -9,6 +9,7 @@ export default async function CommercialHomePage() {
     const [postsResult, currencies] = await Promise.all([
         getCommercialDraftPosts(),
         getCurrencies()
+
     ]);
 
     const convertedPosts = (postsResult.success 
@@ -17,14 +18,12 @@ export default async function CommercialHomePage() {
           brand: { ...post.brand },
           wig: post.wig ? {
             ...post.wig,
-            basePrice: post.wig.basePrice,
-            currency: {
-              symbol: post.wig.currency.symbol,
-              rate: post.wig.currency.rate
-            }
+            basePrice: Number(post.wig.basePrice),
+            currency: post.wig.currency as unknown as { id: string; symbol: string; rate: number },
+            quality: post.wig.quality as unknown as { id: string; name: string; orderIndex: number }
           } : null
         }))
-      : []) as (PostWithRelations & { isShared: boolean })[];
+      : []) as (PostWithRelations)[];
 
     // Filter posts based on shared status
     const unsharedPosts = convertedPosts?.filter(post => !post.isShared) || [];
