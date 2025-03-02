@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist } from "next/font/google";
+import { Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/Header";
@@ -9,10 +9,17 @@ import { Toaster } from "@/components/ui/sonner"
 
 // TODO: Make sure the theme is consistent across the app (before and after authentication)
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// const geistSans = Geist({
+//   variable: "--font-geist-sans",
+//   subsets: ["latin"],
+// });
+
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
+  variable: "--font-instrument-sans",
 });
+
+
 
 export const metadata: Metadata = {
   title: "Himbene",
@@ -27,7 +34,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={`${geistSans.variable} antialiased`} suppressHydrationWarning>
+        <body className={`${instrumentSans.className} antialiased`} suppressHydrationWarning>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

@@ -14,7 +14,7 @@ import {
   User,
   Home,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { UserRole } from "@prisma/client";
 
 export type NavItem = {
@@ -99,17 +99,6 @@ export const cannotAccess = (
 export function SidebarNav({ userRole }: { userRole: UserRole | null }) {
   const pathname = usePathname();
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
-
-  useEffect(() => {
-    console.log("userRole", userRole);
-    const shouldNotAccess_ADMIN = cannotAccess(userRole, ["ADMIN"]);
-    const shouldNotAccess_COMMERCIAL = cannotAccess(userRole, ["COMMERCIAL"]);
-    console.log("User should not access ADMIN", shouldNotAccess_ADMIN);
-    console.log(
-      "User should not access COMMERCIAL",
-      shouldNotAccess_COMMERCIAL
-    );
-  }, [userRole]);
 
   const toggleDropdown = (label: string) => {
     setOpenDropdowns((prev) =>

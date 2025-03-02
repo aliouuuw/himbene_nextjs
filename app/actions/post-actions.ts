@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import prismaClient from "@/lib/prisma-client";
-import { Post, PostStatus } from "@prisma/client";
+import { Post, PostStatus, UserRole } from "@prisma/client";
 
 export type CreatePostInput = {
   content: string;
@@ -94,14 +94,36 @@ export async function createDraftPost(input: CreatePostInput) {
   }
 }
 
-export async function getDraftPosts(): Promise<{ success: boolean; data?: PostWithRelations[]; error?: string }> {
+export async function getAdminPosts(): Promise<{ success: boolean; data?: PostWithRelations[]; error?: string }> {
   try {
     const { userId } = await auth();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }
 
-    // Get posts in draft that are associated with the user's brand
+    const posts = await prismaClient.post.findMany({
+      include: {
+        user: true,
+        brand: true,
+        wig: true,
+      },
+    });
+
+    return { success: true, data: posts as unknown as PostWithRelations[] };
+  } catch (error) {
+    console.error("Failed to fetch admin posts:", error);
+    return { success: false, error: "Failed to fetch admin posts" };
+  }
+}
+
+export async function getCommercialDraftPosts(): Promise<{ success: boolean; data?: PostWithRelations[]; error?: string }> {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Get posts in draft that are associated with the user's brand or the user is an infographe
     const posts = await prismaClient.post.findMany({
       where: {
         status: PostStatus.DRAFT,
@@ -146,5 +168,74 @@ export async function getDraftPosts(): Promise<{ success: boolean; data?: PostWi
   } catch (error) {
     console.error("Failed to fetch draft posts:", error);
     return { success: false, error: "Failed to fetch draft posts" };
+  }
+}
+
+
+export async function getInfographePosts(): Promise<{ success: boolean; data?: PostWithRelations[]; error?: string }> {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const posts = await prismaClient.post.findMany({
+      where: {
+        status: PostStatus.DRAFT,
+        user: {
+          role: UserRole.INFOGRAPHE,
+        },
+      },
+      include: {
+        user: true,
+        brand: true,
+        wig: true,
+      },
+    });
+
+    return { success: true, data: posts as unknown as PostWithRelations[] };
+  } catch (error) {
+    console.error("Failed to fetch infographe posts:", error);
+    return { success: false, error: "Failed to fetch infographe posts" };
+  }
+}
+
+export async function getPublishedPosts(): Promise<{ success: boolean; data?: PostWithRelations[]; error?: string }> {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const posts = await prismaClient.post.findMany({
+      where: {
+        status: PostStatus.PUBLISHED,
+      },
+    });
+
+    return { success: true, data: posts as unknown as PostWithRelations[] };
+  } catch (error) {
+    console.error("Failed to fetch published posts:", error);
+    return { success: false, error: "Failed to fetch published posts" };
+  }
+}
+
+export async function getScheduledPosts(): Promise<{ success: boolean; data?: PostWithRelations[]; error?: string }> {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const posts = await prismaClient.post.findMany({
+      where: {
+        status: PostStatus.SCHEDULED,
+      },
+    });
+
+    return { success: true, data: posts as unknown as PostWithRelations[] };
+  } catch (error) {
+    console.error("Failed to fetch scheduled posts:", error);
+    return { success: false, error: "Failed to fetch scheduled posts" };
   }
 }

@@ -1,8 +1,8 @@
-import { getDraftPosts } from "@/app/actions/post-actions";
+import { getCommercialDraftPosts } from "@/app/actions/post-actions";
 import { DraftPostsList } from "./DraftPostList";
 
 export default async function CommercialHomePage() {
-    const result = await getDraftPosts();
+    const result = await getCommercialDraftPosts();
 
     // Convert basePrice to number before passing to DraftPostsList
     const convertedPosts = result.success 

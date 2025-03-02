@@ -13,6 +13,13 @@ interface CreateUserData {
   brandIds: string[];
 }
 
+interface BrandData {
+  name: string;
+  description: string;
+  logoUrl: string;
+  isActive: boolean;
+}
+
 export async function createUser(data: CreateUserData) {
   const currentUser = await getAuthenticatedUserFromDb();
   
@@ -81,18 +88,17 @@ export async function getUsers() {
   });
 }
 
-export async function createBrand(name: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
+export async function createBrand(data: BrandData) {
+  try {
+    const result = await prismaClient.brand.create({
+      data
+    });
+    revalidatePath("/dashboard/admin/brands");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to create brand" };
   }
-
-  return await prismaClient.brand.create({
-    data: {
-      name: name,
-    },
-  });
 }
 
 export async function getBrands() {
@@ -103,31 +109,33 @@ export async function getBrands() {
   }
 
   return await prismaClient.brand.findMany();
-} 
-
-export async function deleteBrand(brandId: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
-
-  return await prismaClient.brand.delete({
-    where: { id: brandId },
-  });
 }
 
-export async function updateBrand(brandId: string, name: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
+export async function deleteBrand(id: string) {
+  try {
+    await prismaClient.brand.delete({
+      where: { id }
+    });
+    revalidatePath("/dashboard/admin/brands");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to delete brand" };
   }
+}
 
-  return await prismaClient.brand.update({
-    where: { id: brandId },
-    data: { name: name },
-  });
+export async function updateBrand(id: string, data: BrandData) {
+  try {
+    const result = await prismaClient.brand.update({
+      where: { id },
+      data
+    });
+    revalidatePath("/dashboard/admin/brands");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to update brand" };
+  }
 }
 
 export async function getWigColors() {
@@ -179,35 +187,31 @@ export async function getCurrencies() {
 }
 
 // Wig Color Actions
-export async function createWigColor(name: string, hexCode?: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
+export async function createWigColor(name: string, hexCode: string) {
+  try {
+    const result = await prismaClient.wigColor.create({
+      data: { name, hexCode }
+    });
+    revalidatePath("/dashboard/admin/colors");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to create color" };
   }
-
-  return await prismaClient.wigColor.create({
-    data: {
-      name,
-      hexCode,
-    },
-  });
 }
 
-export async function updateWigColor(id: string, name: string, hexCode?: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
+export async function updateWigColor(id: string, name: string, hexCode: string) {
+  try {
+    const result = await prismaClient.wigColor.update({
+      where: { id },
+      data: { name, hexCode }
+    });
+    revalidatePath("/dashboard/admin/colors");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to update color" };
   }
-
-  return await prismaClient.wigColor.update({
-    where: { id },
-    data: {
-      name,
-      hexCode,
-    },
-  });
 }
 
 export async function deleteWigColor(id: string) {
@@ -223,53 +227,44 @@ export async function deleteWigColor(id: string) {
 }
 
 // Wig Size Actions
-export async function createWigSize(name: string, description?: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
+export async function createWigSize(name: string, description: string) {
+  try {
+    const result = await prismaClient.wigSize.create({
+      data: { name, description }
+    });
+    revalidatePath("/dashboard/admin/sizes");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to create size" };
   }
-
-  const maxOrderIndex = await prismaClient.wigSize.findFirst({
-    orderBy: { orderIndex: 'desc' },
-    select: { orderIndex: true },
-  });
-
-  return await prismaClient.wigSize.create({
-    data: {
-      name,
-      description,
-      orderIndex: (maxOrderIndex?.orderIndex ?? -1) + 1,
-    },
-  });
 }
 
-export async function updateWigSize(id: string, name: string, description?: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
+export async function updateWigSize(id: string, name: string, description: string) {
+  try {
+    const result = await prismaClient.wigSize.update({
+      where: { id },
+      data: { name, description }
+    });
+    revalidatePath("/dashboard/admin/sizes");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to update size" };
   }
-
-  return await prismaClient.wigSize.update({
-    where: { id },
-    data: {
-      name,
-      description,
-    },
-  });
 }
 
 export async function deleteWigSize(id: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
+  try {
+    await prismaClient.wigSize.delete({
+      where: { id }
+    });
+    revalidatePath("/dashboard/admin/sizes");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to delete size" };
   }
-
-  return await prismaClient.wigSize.delete({
-    where: { id },
-  });
 }
 
 // Currency Actions
