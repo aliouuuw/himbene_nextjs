@@ -4,6 +4,7 @@ import prismaClient from "@/lib/prisma-client";
 import { getAuthenticatedUserFromDb, isAdmin } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { fetchExchangeRates } from "@/lib/exchange-rates";
 
 interface CreateUserData {
   email: string;
@@ -18,6 +19,13 @@ interface BrandData {
   description: string;
   logoUrl: string;
   isActive: boolean;
+}
+
+interface CurrencyData {
+  id?: string;
+  name: string;
+  symbol: string;
+  isBase: boolean;
 }
 
 export async function createUser(data: CreateUserData) {
@@ -179,10 +187,10 @@ export async function getCurrencies() {
     },
   });
 
-  // Convert Decimal to string for serialization
+  // Convert Decimal to number for serialization
   return currencies.map(currency => ({
     ...currency,
-    rate: currency.rate.toString(),
+    rate: Number(currency.rate)
   }));
 }
 
@@ -268,50 +276,177 @@ export async function deleteWigSize(id: string) {
 }
 
 // Currency Actions
-export async function createCurrency(id: string, name: string, symbol: string, rate: number) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
+export async function createCurrency(data: CurrencyData) {
+  try {
+    // Check if we're trying to set this as base while another base exists
+    if (data.isBase) {
+      const existingBase = await prismaClient.currency.findFirst({
+        where: { isBase: true }
+      });
+      
+      if (existingBase) {
+        return { 
+          success: false, 
+          error: `Cannot set as base currency. ${existingBase.name} (${existingBase.id}) is already the base currency. Either update the ${existingBase.name} or delete ${existingBase.name} before setting a new base currency.` 
+        };
+      }
+    }
 
-  return await prismaClient.currency.create({
-    data: {
-      id, // e.g., "USD"
-      name,
-      symbol,
-      rate,
-    },
-  });
+    const result = await prismaClient.currency.create({
+      data: {
+        id: data.id!,
+        name: data.name,
+        symbol: data.symbol,
+        isBase: data.isBase,
+        rate: data.isBase ? 1 : 0,
+      }
+    });
+
+    const sanitizedResult = {
+      ...result,
+      rate: Number(result.rate)
+    };
+
+    // Sync rates after adding new currency
+    await syncExchangeRates();
+    
+    revalidatePath("/dashboard/admin/currencies");
+    return { success: true, data: sanitizedResult };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to create currency" };
+  }
 }
 
-export async function updateCurrency(id: string, name: string, symbol: string, rate: number) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
+export async function updateCurrency(id: string, data: CurrencyData) {
+  try {
+    // Check if we're trying to set this as base while another base exists
+    if (data.isBase) {
+      const existingBase = await prismaClient.currency.findFirst({
+        where: { 
+          isBase: true,
+          id: { not: id } // Exclude current currency from check
+        }
+      });
 
-  return await prismaClient.currency.update({
-    where: { id },
-    data: {
-      name,
-      symbol,
-      rate,
-    },
-  });
+      // Set isBase to false for the existing base currency
+      if (existingBase) {
+        await prismaClient.currency.update({
+          where: { id: existingBase.id },
+          data: { isBase: false }
+        });
+      }
+    }
+
+    const result = await prismaClient.currency.update({
+      where: { id },
+      data: {
+        name: data.name,
+        symbol: data.symbol,
+        isBase: data.isBase,
+        rate: data.isBase ? 1 : undefined,
+      }
+    });
+
+    const sanitizedResult = {
+      ...result,
+      rate: Number(result.rate)
+    };
+
+    // Sync rates after updating currency
+    await syncExchangeRates();
+
+    revalidatePath("/dashboard/admin/currencies");
+    return { success: true, data: sanitizedResult };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to update currency" };
+  }
 }
 
 export async function deleteCurrency(id: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
+  try {
+    const currency = await prismaClient.currency.findUnique({
+      where: { id }
+    });
 
-  return await prismaClient.currency.delete({
-    where: { id },
-  });
+    if (currency?.isBase) {
+      return { success: false, error: "Cannot delete base currency. Please set another currency as base first." };
+    }
+
+    // Find base currency to reassign wigs
+    const baseCurrency = await prismaClient.currency.findFirst({
+      where: { isBase: true }
+    });
+
+    if (!baseCurrency) {
+      return { success: false, error: "No base currency found to reassign wigs" };
+    }
+
+    // Update all wigs using this currency to use base currency
+    await prismaClient.wig.updateMany({
+      where: { currencyId: id },
+      data: { currencyId: baseCurrency.id }
+    });
+
+    // Now safe to delete the currency
+    await prismaClient.currency.delete({
+      where: { id }
+    });
+    
+    // Sync rates after deleting currency
+    await syncExchangeRates();
+    
+    revalidatePath("/dashboard/admin/currencies");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete currency:", error);
+    return { success: false, error: "Failed to delete currency" };
+  }
+}
+
+export async function syncExchangeRates() {
+  try {
+    const baseCurrency = await prismaClient.currency.findFirst({
+      where: { isBase: true }
+    });
+
+    if (!baseCurrency) {
+      return { success: false, error: "No base currency set" };
+    }
+
+    const result = await fetchExchangeRates(baseCurrency.id);
+    
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    // Update all currency rates
+    await Promise.all(
+      Object.entries(result.rates).map(([code, rate]) =>
+        prismaClient.currency.updateMany({
+          where: { id: code },
+          data: { 
+            rate: Number(rate), // Ensure rate is converted to number
+            lastUpdated: new Date()
+          }
+        })
+      )
+    );
+
+    // Fetch updated currencies and convert Decimal to number
+    const updatedCurrencies = await prismaClient.currency.findMany();
+    const sanitizedCurrencies = updatedCurrencies.map(currency => ({
+      ...currency,
+      rate: Number(currency.rate)
+    }));
+
+    revalidatePath("/dashboard/admin/currencies");
+    return { success: true, data: sanitizedCurrencies };
+  } catch (error) {
+    console.error("Failed to sync exchange rates:", error);
+    return { success: false, error: "Failed to sync exchange rates" };
+  }
 }
 
 export async function updateUser(userId: string, data: {

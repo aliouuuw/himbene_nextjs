@@ -1,19 +1,24 @@
 import { getCommercialDraftPosts } from "@/app/actions/post-actions";
+import { getCurrencies } from "@/app/actions/admin-actions";
 import { DraftPostsList } from "./DraftPostList";
 
 export default async function CommercialHomePage() {
-    const result = await getCommercialDraftPosts();
+    const [postsResult, currencies] = await Promise.all([
+        getCommercialDraftPosts(),
+        getCurrencies()
+    ]);
 
     // Convert basePrice to number before passing to DraftPostsList
-    const convertedPosts = result.success 
-      ? result.data?.map(post => ({
+    const convertedPosts = postsResult.success 
+      ? postsResult.data?.map(post => ({
           ...post,
+          brand: { ...post.brand },  // Ensure brand is included
           wig: post.wig ? {
             ...post.wig,
-            basePrice: Number(post.wig.basePrice), // Convert string to number
+            basePrice: post.wig.basePrice,  // Keep as string
             currency: {
-              ...post.wig.currency,
-              rate: post.wig.currency.rate // Keep as string if needed for display
+              symbol: post.wig.currency.symbol,
+              rate: post.wig.currency.rate   // Keep as string
             }
           } : null
         }))
@@ -26,10 +31,13 @@ export default async function CommercialHomePage() {
             </div>
             <div className="space-y-4">
                 <h2 className="text-2xl font-semibold">Posts to Publish</h2>
-                {result.success ? (
-                    <DraftPostsList posts={convertedPosts || []} />
+                {postsResult.success ? (
+                    <DraftPostsList 
+                        posts={convertedPosts || []} 
+                        currencies={currencies}
+                    />
                 ) : (
-                    <div className="text-red-500">{result.error}</div>
+                    <div className="text-red-500">{postsResult.error}</div>
                 )}
             </div>
         </div>

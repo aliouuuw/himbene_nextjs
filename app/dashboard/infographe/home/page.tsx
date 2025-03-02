@@ -6,12 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function InfographeHomePage() {
-    // Fetch all necessary data
-    const [brands, colors, sizes, currencies, postsResult] = await Promise.all([
+    // Split currencies into two formats - one for each component
+    const [brands, colors, sizes, rawCurrencies, postsResult] = await Promise.all([
         getBrands(),
         getWigColors(),
         getWigSizes(),
-        getCurrencies(),
+        getCurrencies().then(currencies => currencies.map(c => ({
+            ...c,
+            rate: c.rate.toString()  // Ensure rate is string
+        }))),
         getInfographePosts()
     ]);
 
@@ -21,14 +24,22 @@ export default async function InfographeHomePage() {
             ...post,
             wig: post.wig ? {
                 ...post.wig,
-                basePrice: Number(post.wig.basePrice),
+                basePrice: post.wig.basePrice.toString(),
                 currency: {
-                    ...post.wig.currency,
+                    symbol: post.wig.currency.symbol,
                     rate: post.wig.currency.rate
                 }
             } : null
         }))
         : [];
+
+    // For DraftPostsList: convert rates to numbers
+    const draftListCurrencies = rawCurrencies.map(c => ({
+        id: c.id,
+        symbol: c.symbol,
+        rate: Number(c.rate),
+        isBase: c.isBase
+    }));
 
     return (
         <div className="space-y-8">
@@ -55,7 +66,7 @@ export default async function InfographeHomePage() {
                                 brands={brands}
                                 colors={colors}
                                 sizes={sizes}
-                                currencies={currencies}
+                                currencies={rawCurrencies}
                             />
                         </CardContent>
                     </Card>
@@ -72,7 +83,7 @@ export default async function InfographeHomePage() {
                         <CardContent>
                             {postsResult.success ? (
                                 convertedPosts && convertedPosts.length > 0 ? (
-                                    <DraftPostsList posts={convertedPosts} />
+                                    <DraftPostsList posts={convertedPosts} currencies={draftListCurrencies} />
                                 ) : (
                                     <p className="text-muted-foreground text-center py-8">
                                         No draft posts yet. Create your first post!

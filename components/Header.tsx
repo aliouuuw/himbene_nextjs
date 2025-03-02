@@ -9,7 +9,7 @@ export default function Header() {
       {/* Logo link to home */}
       <Link href="/">
         <div className="relative h-16 w-16">
-          <Image src="/himbene.png" alt="Himbene logo" fill />
+          <Image src="/himbene.png" alt="Himbene logo" fill className="dark:invert"/>
         </div>
       </Link>
       <div className="flex gap-2">

@@ -159,6 +159,9 @@ export async function getCommercialDraftPosts(): Promise<{ success: boolean; dat
         basePrice: post.wig.basePrice.toString(),
         currency: {
           ...post.wig.currency,
+          id: post.wig.currency.id,
+          symbol: post.wig.currency.symbol,
+          isBase: post.wig.currency.isBase,
           rate: post.wig.currency.rate.toString(),
         },
       } : null,

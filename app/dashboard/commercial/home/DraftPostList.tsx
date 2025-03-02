@@ -27,10 +27,11 @@ type PostWithRelations = PrismaPost & {
     id: string;
     name: string;
     description: string | null;
-    basePrice: number;
+    basePrice: string;
     currencyId: string;
     currency: {
       symbol: string;
+      rate: string;
     };
     color: {
       name: string;
@@ -41,7 +42,17 @@ type PostWithRelations = PrismaPost & {
   } | null;
 };
 
-export function DraftPostsList({ posts }: { posts: PostWithRelations[] }) {
+interface Props {
+  posts: PostWithRelations[];
+  currencies: Array<{
+    id: string;
+    symbol: string;
+    rate: number;
+    isBase: boolean;
+  }>;
+}
+
+export function DraftPostsList({ posts, currencies }: Props) {
   if (posts.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
@@ -70,8 +81,9 @@ export function DraftPostsList({ posts }: { posts: PostWithRelations[] }) {
 //     return content;
 //   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return `${amount} ${currency}`;
+  const formatCurrency = (amount: number, currency: { symbol: string, rate: number }) => {
+    const convertedAmount = (amount * currency.rate).toFixed(2);
+    return `${currency.symbol}${convertedAmount}`;
   };
 
   return (
@@ -92,7 +104,7 @@ export function DraftPostsList({ posts }: { posts: PostWithRelations[] }) {
                 <p className="font-medium">{post.wig.name}</p>
                 {post.wig.description && (
                   <p className="text-sm text-muted-foreground">
-                    {post.wig.description} +
+                    {post.wig.description}
                   </p>
                 )}
                 <div className="flex gap-2 text-sm">
@@ -100,9 +112,23 @@ export function DraftPostsList({ posts }: { posts: PostWithRelations[] }) {
                   <span>•</span>
                   <span>Color: {post.wig.color.name}</span>
                 </div>
-                <p className="font-medium">
-                  {formatCurrency(post.wig.basePrice, post.wig.currency.symbol)}
-                </p>
+                <div className="space-y-1">
+                  <p className="font-medium">
+                    {formatCurrency(Number(post.wig.basePrice), {
+                      symbol: post.wig.currency.symbol,
+                      rate: Number(post.wig.currency.rate)
+                    })}
+                  </p>
+                  <div className="text-sm text-muted-foreground">
+                    {currencies
+                      .filter(curr => curr.id !== post.wig?.currencyId)
+                      .map(currency => (
+                        <p key={currency.id}>
+                          {formatCurrency(Number(post.wig?.basePrice || 0), currency)}
+                        </p>
+                      ))}
+                  </div>
+                </div>
               </div>
             )}
 
