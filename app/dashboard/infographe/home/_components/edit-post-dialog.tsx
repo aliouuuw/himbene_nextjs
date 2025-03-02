@@ -17,13 +17,15 @@ import { updatePost } from "@/app/actions/post-actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Currency } from "@/types";
+import { WigQuality } from "@prisma/client";
 
 interface EditPostDialogProps {
   post: PostWithRelations;
   currencies: Currency[];
+  qualities: WigQuality[];
 }
 
-export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
+export function EditPostDialog({ post, currencies, qualities }: EditPostDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -33,6 +35,7 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
     wigDescription: post.wig?.description || "",
     basePrice: post.wig?.basePrice || 0,
     currencyId: post.wig?.currencyId || "",
+    qualityId: post.wig?.quality?.id || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,6 +50,7 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
           description: formData.wigDescription,
           basePrice: formData.basePrice,
           currencyId: formData.currencyId,
+          qualityId: formData.qualityId,
         },
       });
 
@@ -116,6 +120,22 @@ export function EditPostDialog({ post, currencies }: EditPostDialogProps) {
                 {currencies.map(currency => (
                   <option key={currency.id} value={currency.id}>
                     {currency.symbol} ({currency.id})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quality">Qualité</Label>
+              <select
+                id="quality"
+                value={formData.qualityId}
+                onChange={(e) => setFormData(prev => ({ ...prev, qualityId: e.target.value }))}
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+              >
+                {qualities?.map(quality => (
+                  <option key={quality.id} value={quality.id}>
+                    {quality.name}
                   </option>
                 ))}
               </select>

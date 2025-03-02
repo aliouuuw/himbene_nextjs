@@ -16,7 +16,8 @@ import {
   Ruler, 
   Building2,
   ArrowRight,
-  Currency
+  Currency,
+  Award
 } from "lucide-react";
 import prismaClient from "@/lib/prisma-client"; // Add this import for database access
 import { Separator } from "@/components/ui/separator";
@@ -31,6 +32,7 @@ export default async function AdminPage() {
   const colorCount = await prismaClient.wigColor.count();
   const sizeCount = await prismaClient.wigSize.count();
   const currencyCount = await prismaClient.currency.count();
+  const qualityCount = await prismaClient.wigQuality.count();
 
   const managementSections = [
     {
@@ -74,6 +76,13 @@ export default async function AdminPage() {
       icon: Currency,
       href: "/dashboard/admin/currencies",
       count: `${currencyCount} ${currencyCount === 1 ? "Devise" : "Devises"}`
+    },
+    {
+      title: "Qualités",
+      description: "Gérer les qualités des cheveux",
+      icon: Award,
+      href: "/dashboard/admin/qualities",
+      count: `${qualityCount} ${qualityCount === 1 ? "Qualité" : "Qualités"}`
     },
     {
       title: "Plateformes",

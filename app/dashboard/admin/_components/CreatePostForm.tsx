@@ -32,6 +32,7 @@ type WigFormData = {
   colorId: string;
   sizeId: string;
   currencyId: string;
+  qualityId: string;
 };
 
 interface CreatePostFormProps {
@@ -59,6 +60,7 @@ export function CreatePostForm({
     colorId: '',
     sizeId: '',
     currencyId: currencies[0]?.id || '',
+    qualityId: '',
   });
   const { startUpload } = useUploadThing("postMedia");
 
@@ -98,13 +100,13 @@ export function CreatePostForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBrand) {
-      toast.error('Please select a brand');
+      toast.error('Veuillez sélectionner une marque');
       return;
     }
 
     // Validate wig data
     if (!wigData.name || !wigData.colorId || !wigData.sizeId || wigData.basePrice <= 0) {
-      toast.error('Please fill in all required wig information');
+      toast.error('Veuillez remplir toutes les informations de la perruque');
       return;
     }
     
@@ -132,7 +134,7 @@ export function CreatePostForm({
       });
       
       if (result.success) {
-        toast.success('Draft post created successfully');
+        toast.success('Post créé avec succès');
         setContent('');
         setFiles([]);
         setDate(new Date());
@@ -143,12 +145,13 @@ export function CreatePostForm({
           colorId: '',
           sizeId: '',
           currencyId: currencies[0]?.id || '',
+          qualityId: '',
         });
       } else {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error('Failed to create draft post');
+      toast.error('Erreur lors de la création du post');
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -183,13 +186,13 @@ export function CreatePostForm({
           />
         </div>
         <div className="space-y-2">
-        <Label htmlFor="brand">Select Brand</Label>
+        <Label htmlFor="brand">Choisir une marque</Label>
         <Select
           value={selectedBrand}
           onValueChange={setSelectedBrand}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select a brand" />
+            <SelectValue placeholder="Choisir une marque" />
           </SelectTrigger>
           <SelectContent>
             {brands.map((brand) => (
@@ -240,7 +243,7 @@ export function CreatePostForm({
               onValueChange={(value) => handleWigDataChange('colorId', value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a color" />
+                <SelectValue placeholder="Choisir une couleur" />
               </SelectTrigger>
               <SelectContent>
                 {colors.map((color) => (
@@ -259,7 +262,7 @@ export function CreatePostForm({
               onValueChange={(value) => handleWigDataChange('sizeId', value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a size" />
+                <SelectValue placeholder="Choisir une taille" />
               </SelectTrigger>
               <SelectContent>
                 {sizes.map((size) => (

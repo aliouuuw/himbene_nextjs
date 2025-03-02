@@ -1,12 +1,18 @@
-import { Post } from "@prisma/client";
-
-export type PostWithRelations = Post & {
+export type PostWithRelations = {
+  id: string;
+  content: string;
+  status: string;
+  mediaUrls: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  brandId: string;
+  brand: {
+    name: string;
+  };
   user: {
     firstName: string | null;
     lastName: string | null;
-  };
-  brand: {
-    name: string;
   };
   wig?: {
     id: string;
@@ -14,16 +20,21 @@ export type PostWithRelations = Post & {
     description: string | null;
     basePrice: number;
     currencyId: string;
+    currency: {
+      id: string;
+      symbol: string;
+      rate: number;
+    };
     color: {
       name: string;
     };
     size: {
       name: string;
     };
-    currency: {
+    quality: {
       id: string;
-      symbol: string;
-      rate: number;
+      name: string;
+      orderIndex: number;
     };
   } | null;
   sharedBy?: {

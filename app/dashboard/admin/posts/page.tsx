@@ -5,14 +5,15 @@ import {
 } from "@/app/actions/post-actions";
 import { InfographePostsList } from "../../infographe/home/_components/infographe-posts-list";
 import { PostWithRelations } from "@/types";
-import { getCurrencies } from "@/app/actions/admin-actions";
+import { getCurrencies, getWigQualities } from "@/app/actions/admin-actions";
 
 export default async function PostsPage() {
-  const [drafts, published, scheduled, currenciesResult] = await Promise.all([
+  const [drafts, published, scheduled, currenciesResult, qualitiesResult] = await Promise.all([
     getAdminPosts(),
     getPublishedPosts(),
     getScheduledPosts(),
     getCurrencies(),
+    getWigQualities(),
   ]);
 
   // Combine all posts
@@ -31,7 +32,8 @@ export default async function PostsPage() {
       currency: post.wig.currency ? {
         ...post.wig.currency,
         rate: post.wig.currency.rate ? Number(post.wig.currency.rate) : null
-      } : null
+      } : null,
+      quality: post.wig.quality as unknown as { id: string; name: string; orderIndex: number }
     } : null
   }));
 
@@ -47,7 +49,7 @@ export default async function PostsPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Gestion des posts</h1>
       <div className="space-y-6">
-        <InfographePostsList posts={serializedPosts as PostWithRelations[]} currencies={currencies} />
+        <InfographePostsList posts={serializedPosts as PostWithRelations[]} currencies={currencies} qualities={qualitiesResult} />
       </div>
     </div>
   );

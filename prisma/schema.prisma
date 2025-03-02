@@ -146,13 +146,15 @@ model Wig {
   color       WigColor @relation(fields: [colorId], references: [id])
   sizeId      String
   size        WigSize  @relation(fields: [sizeId], references: [id])
+  qualityId   String?   @default(cuid())
+  quality     WigQuality? @relation(fields: [qualityId], references: [id])
   imageUrls   Json? 
   status      WigStatus @default(DRAFT)
   posts       Post[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([brandId, colorId, sizeId])
+  @@index([brandId, colorId, sizeId, qualityId])
 }
 
 model Currency {
@@ -213,4 +215,16 @@ model SharedPost {
 
   @@unique([postId, userId])
   @@index([userId])
+}
+
+model WigQuality {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "Premium", "Standard", "Economy"
+  description String?
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  wigs        Wig[]
+
+  @@index([orderIndex])
 }

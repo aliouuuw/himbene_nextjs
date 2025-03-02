@@ -13,10 +13,10 @@ import Image from 'next/image';
 import { createDraftPost } from '@/app/actions/post-actions';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brand, WigColor, WigSize } from '@prisma/client';
+import { Brand, WigColor, WigQuality, WigSize } from '@prisma/client';
 import { useUploadThing } from '@/lib/uploadthing';
 import { Currency } from "@/types";
-
+import { fr } from 'date-fns/locale';
 type WigFormData = {
   name: string;
   description: string;
@@ -24,6 +24,7 @@ type WigFormData = {
   colorId: string;
   sizeId: string;
   currencyId: string;
+  qualityId: string;
 };
 
 interface CreatePostFormProps {
@@ -31,6 +32,7 @@ interface CreatePostFormProps {
   colors: WigColor[];
   sizes: WigSize[];
   currencies: Currency[];
+  qualities: WigQuality[];
 }
 
 export function CreatePostForm({ 
@@ -38,6 +40,7 @@ export function CreatePostForm({
   colors,
   sizes,
   currencies,
+  qualities,
 }: CreatePostFormProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [files, setFiles] = useState<File[]>([]);
@@ -50,6 +53,7 @@ export function CreatePostForm({
     colorId: '',
     sizeId: '',
     currencyId: currencies[0]?.id || '',
+    qualityId: qualities[0]?.id || '',
   });
   const { startUpload } = useUploadThing("postMedia");
 
@@ -89,13 +93,13 @@ export function CreatePostForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBrand) {
-      toast.error('Please select a brand');
+      toast.error('Veuillez sélectionner une marque');
       return;
     }
 
     // Validate wig data
     if (!wigData.name || !wigData.colorId || !wigData.sizeId || wigData.basePrice <= 0) {
-      toast.error('Please fill in all required wig information');
+      toast.error('Veuillez remplir toutes les informations de la perruque');
       return;
     }
     
@@ -106,7 +110,7 @@ export function CreatePostForm({
       if (files.length > 0) {
         const uploadResponse = await startUpload(files);
         if (!uploadResponse) {
-          throw new Error('Failed to upload media files');
+          throw new Error('Erreur lors de la téléchargement des fichiers');
         }
         mediaUrls = uploadResponse.map(file => file.url);
       }
@@ -123,7 +127,7 @@ export function CreatePostForm({
       });
       
       if (result.success) {
-        toast.success('Draft post created successfully');
+        toast.success('Post créé avec succès');
         setFiles([]);
         setDate(new Date());
         setWigData({
@@ -132,14 +136,15 @@ export function CreatePostForm({
           basePrice: 0,
           colorId: '',
           sizeId: '',
-          currencyId: currencies[0]?.id || '',
+          currencyId: currencies[0]?.id || '',  
+          qualityId: qualities[0]?.id || '',
         });
         setSelectedBrand('');
       } else {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error('Failed to create draft post');
+      toast.error('Erreur lors de la création du post');
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -181,7 +186,7 @@ export function CreatePostForm({
           onValueChange={setSelectedBrand}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select a brand" />
+            <SelectValue placeholder="Choisir une marque" />
           </SelectTrigger>
           <SelectContent>
             {brands.map((brand) => (
@@ -191,6 +196,25 @@ export function CreatePostForm({
             ))}
           </SelectContent>
         </Select>
+        <Label htmlFor="wigQuality">Qualité</Label>
+        <Select
+          value={wigData.qualityId}
+          onValueChange={(value) => handleWigDataChange('qualityId', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Choisir une qualité" />
+          </SelectTrigger>
+          <SelectContent>
+            {qualities.map((quality) => (
+              <SelectItem key={quality.id} value={quality.id}>
+                {quality.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
       </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -232,7 +256,7 @@ export function CreatePostForm({
               onValueChange={(value) => handleWigDataChange('colorId', value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a color" />
+                <SelectValue placeholder="Choisir une couleur" />
               </SelectTrigger>
               <SelectContent>
                 {colors.map((color) => (
@@ -251,7 +275,7 @@ export function CreatePostForm({
               onValueChange={(value) => handleWigDataChange('sizeId', value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a size" />
+                <SelectValue placeholder="Choisir une taille" />
               </SelectTrigger>
               <SelectContent>
                 {sizes.map((size) => (
@@ -294,7 +318,7 @@ export function CreatePostForm({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-                      <span className="text-sm text-gray-500">Video File</span>
+                      <span className="text-sm text-gray-500">Fichier vidéo</span>
                     </div>
                   )}
                   <button
@@ -321,7 +345,7 @@ export function CreatePostForm({
               type="button"
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, 'PPP') : <span>Choisir une date</span>}
+              {date ? format(date, 'PPP', { locale: fr }) : <span>Choisir une date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">

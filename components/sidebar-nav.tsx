@@ -16,6 +16,7 @@ import {
   Ruler,
   Building2,
   Currency,
+  Award
 } from "lucide-react";
 import { useState } from "react";
 import { UserRole } from "@prisma/client";
@@ -70,6 +71,11 @@ export const navItems: NavItem[] = [
         href: "/dashboard/admin/currencies",
         label: "Devises",
         icon: Currency,
+      },
+      {
+        href: "/dashboard/admin/qualities",
+        label: "Qualités",
+        icon: Award,
       },
       {
         href: "/dashboard/admin/platforms",

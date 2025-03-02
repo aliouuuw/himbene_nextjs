@@ -1,19 +1,21 @@
-import { getBrands, getCurrencies, getWigSizes, getWigColors } from "@/app/actions/admin-actions";
+import { getBrands, getCurrencies, getWigSizes, getWigColors, getWigQualities } from "@/app/actions/admin-actions";
 import { getInfographePosts } from "@/app/actions/post-actions";
 import { PostWithRelations, Currency } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InfographePostsList } from "./_components/infographe-posts-list";
 import { CreatePostButton } from "./_components/create-post-button";
 import { Separator } from "@/components/ui/separator";
+import { WigQuality } from "@prisma/client";
 
 // Create a reusable component for TabsContent
-function PostsTabsContent({ value, posts, currencies, error }: { value: string, posts: PostWithRelations[], currencies: Currency[], error: string }) {
+function PostsTabsContent({ value, posts, currencies, qualities, error }: { value: string, posts: PostWithRelations[], currencies: Currency[], qualities: WigQuality[], error: string }) {
     return (
         <TabsContent value={value} className="m-0">
             {posts.length > 0 ? (
                 <InfographePostsList 
                     posts={posts}
                     currencies={currencies}
+                    qualities={qualities}
                 />
             ) : (
                 <div className="flex items-center justify-center h-32">
@@ -28,7 +30,7 @@ function PostsTabsContent({ value, posts, currencies, error }: { value: string, 
 export default async function InfographeHomePage() {
     const [postsResult, rawCurrencies] = await Promise.all([
         getInfographePosts(),
-        getCurrencies()
+        getCurrencies(),
     ]);
 
     // Convert currencies to the correct format
@@ -37,20 +39,25 @@ export default async function InfographeHomePage() {
         rate: Number(c.rate),
         lastUpdated: new Date(c.lastUpdated)
     }));
-    const [brands, colors, sizes] = await Promise.all([
+    const [brands, colors, sizes, qualities] = await Promise.all([
         getBrands(),
         getWigColors(),
-        getWigSizes()
+        getWigSizes(),
+        getWigQualities()
     ]);
 
-    // No need to convert posts since getInfographePosts now returns the correct format
+    // Update the mapping to ensure mediaUrls is a string array
     const posts: PostWithRelations[] = postsResult.success 
         ? (postsResult.data?.map(post => ({
             ...post,
+            mediaUrls: Array.isArray(post.mediaUrls) 
+                ? post.mediaUrls.filter(url => typeof url === 'string') as string[]
+                : [],
             wig: post.wig ? {
                 ...post.wig,
                 basePrice: Number(post.wig.basePrice),
-                currency: post.wig.currency as unknown as { id: string; symbol: string; rate: number }
+                currency: post.wig.currency as unknown as { id: string; symbol: string; rate: number },
+                quality: post.wig.quality as unknown as { id: string; name: string; orderIndex: number }
             } : null
         })) || [])
         : [];
@@ -89,25 +96,34 @@ export default async function InfographeHomePage() {
                                     </span>
                                 </TabsTrigger>
                             </TabsList>
-                            <CreatePostButton currencies={currencies} brands={brands} colors={colors} sizes={sizes} />
+                            <CreatePostButton 
+                                currencies={currencies} 
+                                brands={brands} 
+                                colors={colors} 
+                                sizes={sizes} 
+                                qualities={qualities} 
+                            />
                         </div>
 
                         <PostsTabsContent 
                             value="all" 
                             posts={posts} 
                             currencies={currencies} 
+                            qualities={qualities}
                             error={postsResult.error || ""} 
                         />
                         <PostsTabsContent 
                             value="drafts" 
                             posts={posts.filter(post => post.status === "DRAFT")} 
                             currencies={currencies} 
+                            qualities={qualities}
                             error={postsResult.error || ""} 
                         />
                         <PostsTabsContent 
                             value="published" 
                             posts={posts.filter(post => post.status === "PUBLISHED")} 
                             currencies={currencies} 
+                            qualities={qualities}
                             error={postsResult.error || ""} 
                         />
                     </Tabs>

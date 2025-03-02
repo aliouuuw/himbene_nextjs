@@ -17,6 +17,7 @@ export type CreatePostInput = {
     basePrice: number;
     colorId: string;
     sizeId: string;
+    qualityId: string;
     currencyId: string;
     imageUrls: string[];
   };
@@ -46,6 +47,9 @@ type PostWithRelations = Post & {
     size: {
       name: string;
     };
+    quality: {
+      name: string;
+    };
   } | null;
 };
 
@@ -65,6 +69,7 @@ export async function createDraftPost(input: CreatePostInput) {
         basePrice: input.wigData.basePrice,
         colorId: input.wigData.colorId,
         sizeId: input.wigData.sizeId,
+        qualityId: input.wigData.qualityId,
         currencyId: input.wigData.currencyId,
         brandId: input.brandId,
         imageUrls: input.wigData.imageUrls,
@@ -226,7 +231,7 @@ export async function getCommercialDraftPosts(): Promise<{ success: boolean; dat
       } : null
     }));
 
-    return { success: true, data: serializedPosts };
+    return { success: true, data: serializedPosts as unknown as PostWithRelations[] };
   } catch (error) {
     console.error("Failed to fetch draft posts:", error);
     return { success: false, error: "Failed to fetch draft posts" };
@@ -275,6 +280,9 @@ export async function getInfographePosts(): Promise<{ success: boolean; data?: P
               select: { name: true }
             },
             size: {
+              select: { name: true }
+            },
+            quality: {
               select: { name: true }
             },
             currency: {
@@ -396,6 +404,7 @@ export async function updatePost(postId: string, data: {
     basePrice?: number;
     colorId?: string;
     sizeId?: string;
+    qualityId?: string;
     currencyId?: string;
     imageUrls?: string[];
   };

@@ -28,13 +28,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PostWithRelations, Currency } from "@/types";
 import { fr } from "date-fns/locale";
-
+import { WigQuality } from "@prisma/client";
 interface Props {
   posts: PostWithRelations[];
-  currencies: Currency[];
+  currencies: Currency[]; 
+  qualities: WigQuality[];
 }
 
-export function InfographePostsList({ posts, currencies }: Props) {
+export function InfographePostsList({ posts, currencies, qualities }: Props) {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(null);
 
   const handleDelete = async (postId: string) => {
@@ -89,7 +90,7 @@ export function InfographePostsList({ posts, currencies }: Props) {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                    <EditPostDialog post={post} currencies={currencies} />
+                    <EditPostDialog post={post} currencies={currencies} qualities={qualities} />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="sm">Supprimer</Button>

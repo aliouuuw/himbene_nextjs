@@ -108,6 +108,9 @@ export function PostCard({
                     <Badge variant="secondary" className="text-xs">
                       {post.wig.color?.name}
                     </Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      {post.wig.quality?.name}
+                    </Badge>
                   </div>
                 )}
                 {post.wig.description && (

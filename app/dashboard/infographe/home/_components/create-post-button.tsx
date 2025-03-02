@@ -5,8 +5,9 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { CreatePostDialog } from "../../_components/create-post-dialog";
 import { Currency } from "@/types";
-import { Brand, WigColor, WigSize } from "@prisma/client";
-export function CreatePostButton({ currencies, brands, colors, sizes }: { currencies: Currency[], brands: Brand[], colors: WigColor[], sizes: WigSize[] }) {
+import { Brand, WigColor, WigSize, WigQuality } from "@prisma/client";
+
+export function CreatePostButton({ currencies, brands, colors, sizes, qualities }: { currencies: Currency[], brands: Brand[], colors: WigColor[], sizes: WigSize[], qualities: WigQuality[] }) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -22,7 +23,8 @@ export function CreatePostButton({ currencies, brands, colors, sizes }: { curren
                 brands={brands}
                 colors={colors}
                 sizes={sizes}
-            />
+                qualities={qualities}
+                />
         </>
     );
 } 

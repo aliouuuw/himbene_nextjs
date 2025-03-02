@@ -502,3 +502,58 @@ export async function deleteUser(userId: string) {
   revalidatePath('/admin/users');
   return { success: true };
 }
+
+// Wig Quality Actions
+export async function getWigQualities() {
+  const currentUser = await getAuthenticatedUserFromDb();
+  
+  if (!isAdmin(currentUser)) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  return await prismaClient.wigQuality.findMany({
+    orderBy: {
+      orderIndex: 'asc',
+    },
+  });
+}
+
+export async function createWigQuality(name: string, description: string) {
+  try {
+    const result = await prismaClient.wigQuality.create({
+      data: { name, description }
+    });
+    revalidatePath("/dashboard/admin/qualities");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to create quality" };
+  }
+}
+
+export async function updateWigQuality(id: string, name: string, description: string) {
+  try {
+    const result = await prismaClient.wigQuality.update({
+      where: { id },
+      data: { name, description }
+    });
+    revalidatePath("/dashboard/admin/qualities");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to update quality" };
+  }
+}
+
+export async function deleteWigQuality(id: string) {
+  try {
+    await prismaClient.wigQuality.delete({
+      where: { id }
+    });
+    revalidatePath("/dashboard/admin/qualities");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to delete quality" };
+  }
+}
