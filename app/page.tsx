@@ -2,8 +2,6 @@ import React from 'react'
 import Link from 'next/link'
 import prismaClient from "@/lib/prisma-client"
 import Image from 'next/image'
-import { getAuthenticatedUserRole } from "@/app/actions/user-actions"
-import { redirect } from "next/navigation"
 
 async function getLandingPagePosts() {
   const posts = await prismaClient.post.findMany({
@@ -33,19 +31,6 @@ async function getLandingPagePosts() {
 }
 
 export default async function Home() {
-  // Check if user is authenticated and redirect if needed
-  const userRole = await getAuthenticatedUserRole()
-  
-  if (userRole) {
-    // If user is authenticated, redirect to correct dashboard depending on role
-    if (userRole === 'ADMIN') {
-      redirect("/dashboard/admin/")
-    } else if (userRole === 'INFOGRAPHE') {
-      redirect("/dashboard/infographe/home")
-    } else if (userRole === 'COMMERCIAL') {
-      redirect("/dashboard/commercial/home")
-    }
-  }
   
   // If not authenticated, show the landing page
   const posts = await getLandingPagePosts()

@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner"
-import { frFR } from "@clerk/localizations";
 
 
 // TODO: Make sure the theme is consistent across the app (before and after authentication)
@@ -33,14 +31,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={frFR}>
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${instrumentSans.className} antialiased`} suppressHydrationWarning>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${instrumentSans.className} antialiased`} suppressHydrationWarning>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
           >
             <Header />
             {children}
@@ -48,6 +45,5 @@ export default function RootLayout({
           </ThemeProvider>
         </body>
       </html>
-    </ClerkProvider>
   );
 }

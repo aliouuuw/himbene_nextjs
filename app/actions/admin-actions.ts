@@ -1,7 +1,7 @@
 'use server'
 
 import prismaClient from "@/lib/prisma-client";
-import { getAuthenticatedUserFromDb, isAdmin } from "@/lib/auth";
+import { isAdmin, auth } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { fetchExchangeRates } from "@/lib/exchange-rates";
@@ -9,8 +9,7 @@ import { fetchExchangeRates } from "@/lib/exchange-rates";
 interface CreateUserData {
   email: string;
   role: UserRole;
-  firstName?: string;
-  lastName?: string;
+  name: string;
   brandIds: string[];
 }
 
@@ -29,48 +28,50 @@ interface CurrencyData {
 }
 
 export async function createUser(data: CreateUserData) {
-  const currentUser = await getAuthenticatedUserFromDb();
-  
-  if (!isAdmin(currentUser)) {
+  if (!await isAdmin()) {
     throw new Error('Unauthorized: Admin access required');
   }
 
   try {
-    // Send invitation via Clerk API first
-    const response = await fetch('https://api.clerk.com/v1/invitations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.CLERK_SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email_address: data.email,
-        public_metadata: {
-          role: data.role,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          pendingDbCreation: true,
-          brandIds: data.brandIds
-        }
-      }),
+    // Generate a random password
+    const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).toUpperCase().slice(-4);
+    
+    // Create the user using auth.api.signUpEmail
+    const result = await auth.api.signUpEmail({
+      body: {
+        name: data.name,
+        email: data.email,
+        password: tempPassword,
+        role: data.role,
+        passwordChangeRequired: true
+      }
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to send invitation');
+    
+    if (!result.token) {
+      throw new Error('Failed to create user');
+    }
+    
+    // Now create the brand associations
+    if (data.brandIds.length > 0) {
+      await prismaClient.userBrand.createMany({
+        data: data.brandIds.map(brandId => ({
+          userId: result.user.id,
+          brandId
+        }))
+      });
     }
 
-    // Store the pending invitation with brand associations
-    const pendingUser = await prismaClient.pendingUser.create({
-      data: {
-        email: data.email,
-        role: data.role,
-        firstName: data.firstName,
-        lastName: data.lastName,
-      }
+    // Get the complete user with brands
+    const user = await prismaClient.user.findUnique({
+      where: { id: result.user.id }
     });
 
     revalidatePath('/admin/users');
-    return { success: true, data: pendingUser };
+    return { 
+      success: true, 
+      data: user,
+      tempPassword // Return the temporary password so it can be displayed to the admin
+    };
   } catch (error) {
     console.error('Error creating user:', error);
     return { success: false, error: 'Failed to create user' };
@@ -78,9 +79,8 @@ export async function createUser(data: CreateUserData) {
 }
 
 export async function getUsers() {
-  const currentUser = await getAuthenticatedUserFromDb();
   
-  if (!isAdmin(currentUser)) {
+  if (!await isAdmin()) {
     throw new Error('Unauthorized: Admin access required');
   }
 
@@ -209,9 +209,8 @@ export async function updateWigColor(id: string, name: string, hexCode: string) 
 }
 
 export async function deleteWigColor(id: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
   
-  if (!isAdmin(currentUser)) {
+  if (!await isAdmin()) {
     throw new Error('Unauthorized: Admin access required');
   }
 
@@ -437,14 +436,12 @@ export async function syncExchangeRates() {
 
 export async function updateUser(userId: string, data: {
   role?: UserRole;
-  firstName?: string;
-  lastName?: string;
+  name?: string;
   brandIds?: string[];
   isActive?: boolean;
 }) {
-  const currentUser = await getAuthenticatedUserFromDb();
   
-  if (!isAdmin(currentUser)) {
+  if (!await isAdmin()) {
     throw new Error('Unauthorized: Admin access required');
   }
 
@@ -452,8 +449,7 @@ export async function updateUser(userId: string, data: {
     where: { id: userId },
     data: {
       role: data.role,
-      firstName: data.firstName,
-      lastName: data.lastName,
+      name: data.name,
       isActive: data.isActive,
       brands: {
         deleteMany: {},
@@ -476,9 +472,8 @@ export async function updateUser(userId: string, data: {
 }
 
 export async function deleteUser(userId: string) {
-  const currentUser = await getAuthenticatedUserFromDb();
   
-  if (!isAdmin(currentUser)) {
+  if (!await isAdmin()) {
     throw new Error('Unauthorized: Admin access required');
   }
 

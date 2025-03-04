@@ -11,8 +11,7 @@ export type PostWithRelations = {
     name: string;
   };
   user: {
-    firstName: string | null;
-    lastName: string | null;
+    name: string | null;
   };
   wig?: {
     id: string;

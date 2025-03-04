@@ -1,5 +1,5 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { auth } from "@clerk/nextjs/server";
+import { authClient } from "@/lib/auth-client";
  
 const f = createUploadthing();
  
@@ -9,11 +9,11 @@ export const ourFileRouter = {
   postMedia: f({ image: { maxFileSize: "4MB", maxFileCount: 10 } })
     .middleware(async () => {
       // Check auth
-      const { userId } = await auth();
-      if (!userId) throw new Error("Unauthorized");
+      const { data: session } = authClient.useSession();
+      if (!session) throw new Error("Unauthorized");
  
       // Return metadata to be stored with the file
-      return { userId };
+      return { userId: session.user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete for userId:", metadata.userId);

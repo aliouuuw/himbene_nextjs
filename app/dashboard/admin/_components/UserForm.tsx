@@ -4,17 +4,10 @@
 import { useState } from 'react';
 import { UserRole, Brand } from '@prisma/client';
 import { createUser } from '@/app/actions/admin-actions';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,157 +15,151 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { toast } from 'sonner';
+import { Copy } from 'lucide-react';
 
 interface UserFormProps {
   brands: Brand[];
 }
 
 export default function UserForm({ brands }: UserFormProps) {
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  
-  const form = useForm({
-    defaultValues: {
-      email: '',
-      role: 'COMMERCIAL' as UserRole,
-      firstName: '',
-      lastName: '',
-      brandIds: [] as string[]
-    }
-  });
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<UserRole>('COMMERCIAL');
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
 
-  // Transform brands into the format expected by MultiSelect
-  const brandOptions = brands.map(brand => ({
-    label: brand.name,
-    value: brand.id
-  }));
-
-  const onSubmit = async (data: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
     try {
-      const result = await createUser(data);
+      const result = await createUser({
+        email,
+        name,
+        role,
+        brandIds: selectedBrands
+      });
       
       if (result.success) {
-        setMessage({ type: 'success', text: 'User created successfully' });
-        form.reset();
+        toast.success('Utilisateur créé avec succès');
+        // Store the temporary password to display to admin
+        setTempPassword(result.tempPassword || null);
+        // Reset form
+        setEmail('');
+        setName('');
+        setRole('COMMERCIAL');
+        setSelectedBrands([]);
       } else {
-        setMessage({ type: 'error', text: result.error || 'Failed to create user' });
+        toast.error(result.error || 'Erreur lors de la création de l\'utilisateur');
       }
     } catch (error) {
+      toast.error('Erreur lors de la création de l\'utilisateur');
       console.error(error);
-      setMessage({ type: 'error', text: 'Failed to create user: ' + error });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const copyPasswordToClipboard = () => {
+    if (tempPassword) {
+      navigator.clipboard.writeText(tempPassword);
+      toast.success('Mot de passe copié dans le presse-papier');
+    }
+  };
+
+  const brandOptions = brands.map(brand => ({
+    value: brand.id,
+    label: brand.name
+  }));
+
   return (
-    <Card className="max-w-md">
-      <CardHeader>
-        <CardTitle>Créer un nouvel utilisateur</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {message && (
-          <Alert className={`mb-4 ${
-            message.type === 'success' ? 'border-green-500 text-green-700' : 'border-red-500 text-red-700'
-          }`}>
-            <AlertDescription className="flex items-center gap-2">
-              {message.type === 'success' ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-              {message.text}
-            </AlertDescription>
-          </Alert>
-        )}
+    <div className="space-y-4">
+      {tempPassword && (
+        <Alert className="mb-4 bg-green-50 border-green-200">
+          <AlertTitle className="text-green-800">Utilisateur créé avec succès</AlertTitle>
+          <AlertDescription className="text-green-700">
+            <div className="mt-2">
+              <p>Mot de passe temporaire:</p>
+              <div className="flex items-center mt-1 bg-white p-2 rounded border">
+                <code className="font-mono text-sm mr-2">{tempPassword}</code>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={copyPasswordToClipboard}
+                  className="ml-auto"
+                >
+                  <Copy size={16} />
+                </Button>
+              </div>
+              <p className="text-sm mt-2">
+                Partagez ce mot de passe avec l&apos;utilisateur. Il devra le changer lors de sa première connexion.
+              </p>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" required {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rôle</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un rôle" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="COMMERCIAL">Commercial</SelectItem>
-                      <SelectItem value="INFOGRAPHE">Infographe</SelectItem>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>  
-                  <FormLabel>Prénom</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="brandIds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Marques</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={brandOptions}
-                      selected={field.value}
-                      onChange={field.onChange}
-                      placeholder="Sélectionner le(s) marque(s)"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit">Créer l&apos;utilisateur</Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+      <Card className="p-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom complet</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="role">Rôle</Label>
+              <Select 
+                value={role} 
+                onValueChange={(value) => setRole(value as UserRole)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un rôle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="INFOGRAPHE">Infographe</SelectItem>
+                  <SelectItem value="COMMERCIAL">Commercial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="brands">Marques</Label>
+              <MultiSelect
+                options={brandOptions}
+                selected={selectedBrands}
+                onChange={setSelectedBrands}
+                placeholder="Sélectionner des marques"
+              />
+            </div>
+          </div>
+          
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Création en cours...' : 'Créer utilisateur'}
+          </Button>
+        </form>
+      </Card>
+    </div>
   );
 } 

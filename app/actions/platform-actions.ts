@@ -1,13 +1,17 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { Platform } from "@prisma/client";
 import prismaClient from "@/lib/prisma-client";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+ 
 
 export async function connectPlatform(platform: Platform) {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
+    if (!session) throw new Error("Unauthorized");
 
     // Generate state parameter to prevent CSRF
     const state = Math.random().toString(36).substring(7);
@@ -28,14 +32,17 @@ export async function connectPlatform(platform: Platform) {
 }
 
 export async function disconnectPlatform(connectionId: string) {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
+    
+    if (!session) throw new Error("Unauthorized");
 
     try {
         await prismaClient.platformConnection.delete({
             where: {
                 id: connectionId,
-                userId,
+                userId: session.user.id,
             },
         });
 

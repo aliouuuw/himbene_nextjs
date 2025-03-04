@@ -1,14 +1,20 @@
 import { getUsers, getBrands } from '@/app/actions/admin-actions'
 import UserForm from '@/app/dashboard/admin/_components/UserForm'
 import UserList from '@/app/dashboard/admin/_components/UserList'
-import { requireAdmin } from '@/lib/auth'
+import { isAdmin } from '@/lib/auth'
+import { redirect } from 'next/navigation';
 
 export default async function UserManagement() {
   const [users, brands] = await Promise.all([
     getUsers(),
     getBrands()
   ]);
-  await requireAdmin();
+  try {
+    await isAdmin();
+  } catch (error) {
+    console.error("User is not admin:", error);
+    redirect("/");
+  }
   
   return (
     <div className="w-full space-y-6">

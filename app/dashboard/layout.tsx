@@ -1,7 +1,7 @@
 import type React from "react"
-import { SidebarNav } from "@/components/sidebar-nav"
-import { MobileNav } from "@/components/mobile-nav"
 import { getAuthenticatedUserRole } from "../actions/user-actions"
+import { MobileNav } from "@/components/mobile-nav"
+import { SidebarNav } from "@/components/sidebar-nav"
 
 export default async function DashboardLayout({
   children,
@@ -9,7 +9,7 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const userRole = await getAuthenticatedUserRole()
-
+  
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Desktop sidebar - hidden on mobile */}
@@ -26,6 +26,6 @@ export default async function DashboardLayout({
         <main className="flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
       </div>
     </div>
-  )
+  );
 }
 

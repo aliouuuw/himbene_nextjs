@@ -1,16 +1,16 @@
-import { auth } from "@clerk/nextjs/server";
+import { authClient } from "@/lib/auth-client";
 import prismaClient from "@/lib/prisma-client";
 import { PlatformConnections } from "./PlatformConnections";
 import { Platform } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 export default async function CommercialUserPlatformsPage() {
-    const { userId } = await auth();
-    if (!userId) redirect("/");
+    const { data: session } = authClient.useSession();
+    if (!session) redirect("/");
 
     const connections = await prismaClient.platformConnection.findMany({
         where: {
-            userId,
+            userId: session.user.id,
         },
         orderBy: {
             createdAt: 'desc'

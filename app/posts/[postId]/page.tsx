@@ -70,8 +70,7 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
       include: {
         user: {
           select: {
-            firstName: true,
-            lastName: true,
+            name: true,
           }
         },
         brand: true,
@@ -92,8 +91,8 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
   const serializedPost = {
     ...post,
     isShared: false,
-    user: post.user || { firstName: null, lastName: null },
-    wig: post.wig ? {
+    user: post.user || { name: null },
+    wig: post.wig ? { 
       ...post.wig,
       id: post.wig.id,
       name: post.wig.name,

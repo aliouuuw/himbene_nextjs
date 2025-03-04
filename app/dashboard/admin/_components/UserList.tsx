@@ -40,8 +40,7 @@ export default function UserList({ users, brands }: UserListProps) {
 
   const handleUpdate = async (userId: string, data: {
     role: UserRole;
-    firstName: string;
-    lastName: string;
+    name: string;
     brandIds: string[];
   }) => {
     try {
@@ -78,7 +77,7 @@ export default function UserList({ users, brands }: UserListProps) {
                   Role: {user.role}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {user.firstName} {user.lastName}
+                  {user.name}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Brands: {user.brands?.map(b => b.brand.name).join(', ') || 'None'}
@@ -127,14 +126,12 @@ function EditUserForm({ user, brands, onSubmit }: {
   brands: Brand[];
   onSubmit: (data: {
     role: UserRole;
-    firstName: string;
-    lastName: string;
+    name: string;
     brandIds: string[];
   }) => void;
 }) {
   const [role, setRole] = useState<UserRole>(user.role);
-  const [firstName, setFirstName] = useState(user.firstName || '');
-  const [lastName, setLastName] = useState(user.lastName || '');
+  const [name, setName] = useState(user.name || '');
   const [selectedBrands, setSelectedBrands] = useState(
     user.brands?.map(b => b.brand.id) || []
   );
@@ -149,8 +146,7 @@ function EditUserForm({ user, brands, onSubmit }: {
     e.preventDefault();
     onSubmit({
       role,
-      firstName,
-      lastName,
+      name,
       brandIds: selectedBrands,
     });
   };
@@ -172,18 +168,10 @@ function EditUserForm({ user, brands, onSubmit }: {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Prénom</label>
-        <Input
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-        />
-      </div>
-
-      <div>
         <label className="block text-sm font-medium mb-1">Nom</label>
         <Input
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
       </div>
 

@@ -1,14 +1,18 @@
 // app/actions/facebook-actions.ts
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import prismaClient from "@/lib/prisma-client";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+ 
+const session = await auth.api.getSession({
+    headers: await headers()
+})  
 
 export async function connectFacebookAccount(code: string, userId: string) {
   // Verify user is authenticated
-  const { userId: authUserId } = await auth();
-  if (!authUserId || authUserId !== userId) {
+  if (!session || session.user.id !== userId) {
     throw new Error("Unauthorized");
   }
   
@@ -114,10 +118,8 @@ export async function connectFacebookAccount(code: string, userId: string) {
   }
 }
 
-export async function createFacebookPost(formData: FormData) {
-  const { userId } = await auth();
-  
-  if (!userId) {
+export async function createFacebookPost(formData: FormData) {  
+  if (!session) {
     return { success: false, error: "Unauthorized" };
   }
 
