@@ -41,6 +41,9 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
         router.refresh();
       } else {
         toast.error(result.error);
+        setTimeout(() => {
+          router.refresh();
+        }, 1000);
       }
     } finally {
       setSyncing(false);

@@ -302,11 +302,12 @@ export async function createCurrency(data: CurrencyData) {
       if (existingBase) {
         return { 
           success: false, 
-          error: `Cannot set as base currency. ${existingBase.name} (${existingBase.id}) is already the base currency. Either update the ${existingBase.name} or delete ${existingBase.name} before setting a new base currency.` 
+          error: `Cannot set as base currency. ${existingBase.name} (${existingBase.id}) is already the base currency.` 
         };
       }
     }
 
+    // Create the currency first
     const result = await prismaClient.currency.create({
       data: {
         id: data.id!,
@@ -322,8 +323,11 @@ export async function createCurrency(data: CurrencyData) {
       rate: Number(result.rate)
     };
 
-    // Sync rates after adding new currency
-    await syncExchangeRates();
+    // Trigger exchange rate sync in the background
+    // This way, if it times out, at least the currency is created
+    void syncExchangeRates().catch(error => {
+      console.error("Background exchange rate sync failed:", error);
+    });
     
     revalidatePath("/dashboard/admin/currencies");
     return { success: true, data: sanitizedResult };

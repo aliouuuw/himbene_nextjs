@@ -79,6 +79,7 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
             color: true,
             size: true,
             currency: true,
+            quality: true,
           },
         },
       },
@@ -105,6 +106,11 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
         id: post.wig.currency.id,
         symbol: post.wig.currency.symbol,
         rate: Number(post.wig.currency.rate)
+      },
+      quality: {
+        id: post.wig.quality?.id,
+        name: post.wig.quality?.name,
+        orderIndex: post.wig.quality?.orderIndex,
       },
     } : null,
     sharedBy: [],

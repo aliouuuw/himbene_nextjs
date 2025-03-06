@@ -51,8 +51,8 @@ export function PostCard({
   const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/posts/${post.id}` || "";
 
   const pathname = usePathname();
-  const isDashboard = pathname.includes("/dashboard");
-  console.log(post);
+  const isDashboardOrCommercial = pathname.includes("/dashboard/admin") || pathname.includes("/dashboard/commercial");
+  //console.log(post);
 
   return (
     <Card className="overflow-hidden border-none max-w-2xl">
@@ -63,7 +63,7 @@ export function PostCard({
               {post.wig?.name}
             </CardTitle>
           </div>
-          {!isDashboard && (
+          {isDashboardOrCommercial && (
             <Badge variant="outline" className="text-xs">
               {post.status}
             </Badge>
@@ -76,24 +76,22 @@ export function PostCard({
         {post.mediaUrls &&
           Array.isArray(post.mediaUrls) &&
           post.mediaUrls.length > 0 && (
-            <div
-              className={`grid ${
-                post.mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"
-              } gap-2 bg-muted/50 rounded-md`}
-            >
-              {(post.mediaUrls as string[]).slice(0, 2).map((url, index) => (
-                <div
-                  key={index}
-                  className="relative aspect-square rounded-md overflow-hidden"
-                >
-                  <Image
-                    src={url}
-                    alt={`${post.wig?.name || "Product"} image ${index + 1}`}
-                    fill
-                    className="object-cover transition-transform hover:scale-105"
-                  />
-                </div>
-              ))}
+            <div className="bg-muted/50 rounded-md p-2">
+              <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
+                {(post.mediaUrls as string[]).map((url, index) => (
+                  <div
+                    key={index}
+                    className="relative aspect-square w-[200px] flex-shrink-0 rounded-md overflow-hidden snap-center"
+                  >
+                    <Image
+                      src={url}
+                      alt={`${post.wig?.name || "Product"} image ${index + 1}`}
+                      fill
+                      className="object-cover transition-transform hover:scale-105"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
