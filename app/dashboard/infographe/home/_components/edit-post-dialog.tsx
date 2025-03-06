@@ -18,14 +18,17 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Currency } from "@/types";
 import { WigQuality } from "@prisma/client";
+import { Brand } from "@prisma/client";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 interface EditPostDialogProps {
   post: PostWithRelations;
   currencies: Currency[];
   qualities: WigQuality[];
+  brands: Brand[];
 }
 
-export function EditPostDialog({ post, currencies, qualities }: EditPostDialogProps) {
+export function EditPostDialog({ post, currencies, qualities, brands }: EditPostDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -36,6 +39,7 @@ export function EditPostDialog({ post, currencies, qualities }: EditPostDialogPr
     basePrice: post.wig?.basePrice || 0,
     currencyId: post.wig?.currencyId || currencies[0]?.id || "",
     qualityId: post.wig?.quality?.id || qualities[0]?.id || "",
+    brandIds: post.brands?.map(b => b.brand.id) || [],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +56,7 @@ export function EditPostDialog({ post, currencies, qualities }: EditPostDialogPr
     try {
       const result = await updatePost(post.id, {
         content: formData.wigDescription,
+        brandIds: formData.brandIds,
         wigData: {
           name: formData.wigName,
           description: formData.wigDescription,
@@ -152,6 +157,19 @@ export function EditPostDialog({ post, currencies, qualities }: EditPostDialogPr
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="brands">Marques</Label>
+            <MultiSelect
+              options={brands.map(brand => ({
+                label: brand.name,
+                value: brand.id
+              }))}
+              selected={formData.brandIds}
+              onChange={(selected) => setFormData(prev => ({ ...prev, brandIds: selected }))}
+              placeholder="Sélectionner des marques"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

@@ -2,13 +2,14 @@
 
 import { PostWithRelations, Currency } from "@/types";
 import { PostCard } from "@/components/post-card";
-
+import { UserBrand } from "@prisma/client";
 interface ClientPostDisplayProps {
   post: PostWithRelations;
   currencies: Currency[];
+  userBrand: UserBrand;
 }
 
-export function ClientPostDisplay({ post, currencies }: ClientPostDisplayProps) {
+export function ClientPostDisplay({ post, currencies, userBrand }: ClientPostDisplayProps) {
   return (
     <PostCard
       post={post}
@@ -16,6 +17,7 @@ export function ClientPostDisplay({ post, currencies }: ClientPostDisplayProps) 
       variant="default"
       showActions={false}
       showShareButtons={true}
+      userBrand={userBrand}
     />
   );
 } 

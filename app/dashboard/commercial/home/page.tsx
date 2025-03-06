@@ -1,5 +1,5 @@
 import { getCommercialDraftPosts } from "@/app/actions/post-actions";
-import { getCurrencies } from "@/app/actions/admin-actions";
+import { getCurrencies, getUserBrand } from "@/app/actions/admin-actions";
 import { PostWithRelations } from "@/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -8,7 +8,7 @@ import { CommercialPostsGrid } from "./commercial-posts-grid";
 import { CommercialPostsList } from "./commercial-posts-list";
 import { getAuthenticatedUsersAccount } from "@/lib/auth";
 import { redirect } from "next/navigation";
-
+import { UserBrand } from "@prisma/client";
 export default async function CommercialHomePage() {
   const account = await getAuthenticatedUsersAccount();
   const passwordChangeRequired = account?.passwordChangeRequired;
@@ -18,40 +18,31 @@ export default async function CommercialHomePage() {
   if (passwordChangeRequired) {
     return redirect("/change-password");
   }
-  const [postsResult, currencies] = await Promise.all([
+  const [postsResult, currencies, userBrand] = await Promise.all([
     getCommercialDraftPosts(),
     getCurrencies(),
+    getUserBrand(),
   ]);
 
   //
   const posts: PostWithRelations[] = postsResult.success
-    ? postsResult.data?.map((post) => ({
+    ? (postsResult.data?.map(post => ({
         ...post,
-        mediaUrls: Array.isArray(post.mediaUrls)
-          ? (post.mediaUrls.filter(
-              (url) => typeof url === "string"
-            ) as string[])
-          : [],
-        wig: post.wig
-          ? {
-              ...post.wig,
-              basePrice: Number(post.wig.basePrice),
-              currency: (post.wig.currency as unknown) as {
-                id: string;
-                symbol: string;
-                rate: number;
-              },
-              quality: (post.wig.quality as unknown) as {
-                id: string;
-                name: string;
-                orderIndex: number;
-              },
-            }
-          : null,
-      })) || []
+        mediaUrls: Array.isArray(post.mediaUrls) 
+            ? post.mediaUrls.filter(url => typeof url === 'string') as string[]
+            : [],
+        wig: post.wig ? {
+            ...post.wig,
+            basePrice: Number(post.wig.basePrice),
+            currency: post.wig.currency as unknown as { id: string; symbol: string; rate: number },
+            quality: post.wig.quality as unknown as { id: string; name: string; orderIndex: number }
+        } : null,
+        brandIds: post.brands?.map(b => b.brand.name) || [],
+        brands: post.brands as unknown as { brand: { id: string; name: string } }[]
+    })) || [])
     : [];
 
-  console.log(posts);
+  //console.log(posts);
 
   // Filter posts based on shared status
   const unsharedPosts = posts?.filter((post) => !post.isShared) || [];
@@ -103,12 +94,14 @@ export default async function CommercialHomePage() {
                 <CommercialPostsGrid
                   posts={unsharedPosts}
                   currencies={currencies}
+                  userBrand={userBrand as UserBrand}
                 />
               </TabsContent>
               <TabsContent value="list">
                 <CommercialPostsList
                   posts={unsharedPosts}
                   currencies={currencies}
+                  userBrand={userBrand as UserBrand}
                 />
               </TabsContent>
             </Tabs>
@@ -131,12 +124,14 @@ export default async function CommercialHomePage() {
                 <CommercialPostsGrid
                   posts={sharedPosts}
                   currencies={currencies}
+                  userBrand={userBrand as UserBrand}
                 />
               </TabsContent>
               <TabsContent value="list">
                 <CommercialPostsList
                   posts={sharedPosts}
                   currencies={currencies}
+                  userBrand={userBrand as UserBrand}
                 />
               </TabsContent>
             </Tabs>

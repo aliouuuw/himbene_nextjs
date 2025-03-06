@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import prismaClient from "@/lib/prisma-client";
 import { Metadata } from "next";
 import { PostWithRelations } from "@/types";
-import { getCurrencies } from "@/app/actions/admin-actions";
+import { getCurrencies, getUserBrand } from "@/app/actions/admin-actions";
 import { ClientPostDisplay } from "./client-post-display";
-
+import { UserBrand } from "@prisma/client";
 export async function generateMetadata(
   { params }: { params: Promise<{ postId: string }> }
 ): Promise<Metadata> {
@@ -12,7 +12,11 @@ export async function generateMetadata(
   const post = await prismaClient.post.findUnique({
     where: { id: postId as string },
     include: {
-      brand: true,
+      brands: {
+        include: {
+          brand: true,
+        },
+      },
       wig: {
         include: {
           color: true,
@@ -25,8 +29,8 @@ export async function generateMetadata(
 
   if (!post) return {};
 
-  const title = post.wig?.name + "|" + ` ${post.wig?.basePrice} F` || post.brand.name + "|" + ` ${post.wig?.basePrice} F`;
-  const description = post.wig?.description || post.brand.description || "";
+  const title = post.wig?.name + "|" + ` ${post.wig?.basePrice} F` || post.brands[0].brand.name + "|" + ` ${post.wig?.basePrice} F`;
+  const description = post.wig?.description || post.brands[0].brand.description || "";
   const imageUrl = Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0
     ? post.mediaUrls[0]
     : "/default-social-image.jpg";
@@ -55,8 +59,8 @@ export async function generateMetadata(
       }],
     },
     other: {
-      'application-name': post.brand.name,
-      'author': post.brand.name,
+      'application-name': post.brands[0].brand.name,
+      'author': post.brands[0].brand.name,
       'linkedin:article:published_time': post.createdAt.toISOString(),
     }
   };
@@ -73,7 +77,11 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
             name: true,
           }
         },
-        brand: true,
+        brands: {
+          include: {
+            brand: true,
+          },
+        },
         wig: {
           include: {
             color: true,
@@ -93,6 +101,8 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
     ...post,
     isShared: false,
     user: post.user || { name: null },
+    brandIds: [],
+    brands: [],
     wig: post.wig ? { 
       ...post.wig,
       id: post.wig.id,
@@ -115,10 +125,11 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
     } : null,
     sharedBy: [],
   } as PostWithRelations;
+  const userBrand = await getUserBrand();
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-8 flex flex-col items-center">
-      <ClientPostDisplay post={serializedPost} currencies={currencies} />
+      <ClientPostDisplay post={serializedPost} currencies={currencies} userBrand={userBrand as UserBrand} />
     </div>
   );
 }

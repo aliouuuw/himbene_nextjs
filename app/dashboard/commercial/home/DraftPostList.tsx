@@ -2,7 +2,7 @@
 
 import { PostCard } from "@/components/post-card";
 import { Currency, PostWithRelations } from "@/types";
-
+import { UserBrand } from "@prisma/client";
 interface Props {
   posts: PostWithRelations[];
   currencies: Array<{
@@ -11,9 +11,10 @@ interface Props {
     rate: string | number;
     isBase: boolean;
   }>;
+  userBrand: UserBrand;
 }
 
-export function DraftPostsList({ posts, currencies }: Props) {
+export function DraftPostsList({ posts, currencies, userBrand }: Props) {
   if (posts.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
@@ -30,6 +31,7 @@ export function DraftPostsList({ posts, currencies }: Props) {
           post={post}
           currencies={currencies as Currency[]}
           variant="default"
+          userBrand={userBrand as UserBrand}
         />
       ))}
     </div>

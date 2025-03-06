@@ -1,16 +1,16 @@
-import { authClient } from "@/lib/auth-client";
+import { getAuthenticatedUsersAccount } from "@/lib/auth";
 import prismaClient from "@/lib/prisma-client";
 import { PlatformConnections } from "./PlatformConnections";
 import { Platform } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 export default async function CommercialUserPlatformsPage() {
-    const { data: session } = authClient.useSession();
-    if (!session) redirect("/");
+    const account = await getAuthenticatedUsersAccount();
+    if (!account) redirect("/");
 
     const connections = await prismaClient.platformConnection.findMany({
         where: {
-            userId: session.user.id,
+            userId: account.id,
         },
         orderBy: {
             createdAt: 'desc'

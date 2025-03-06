@@ -12,14 +12,21 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { UserBrand } from "@prisma/client";
 
 interface Props {
   posts: PostWithRelations[];
-  currencies: Currency[];   
+  currencies: Currency[];
+  userBrand: UserBrand;
 }
 
-export function CommercialPostsGrid({ posts, currencies }: Props) {
+export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(null);
+
+  const getAssociatedUserBrand = (post: PostWithRelations) => {
+    const brand = post.brands?.find(b => b.brand.id == userBrand.brandId);
+    return brand?.brand?.name || 'No brand';
+  };
 
   const handleShare = async (postId: string, isShared: boolean, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -86,7 +93,9 @@ export function CommercialPostsGrid({ posts, currencies }: Props) {
                     {post.wig?.basePrice} {post.wig?.currency?.symbol}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">{post.brand?.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {getAssociatedUserBrand(post)}
+                </p>
                 {post.wig?.quality?.name && (
                   <Badge variant="outline" className="text-xs">
                     {post.wig.quality.name}
@@ -119,6 +128,7 @@ export function CommercialPostsGrid({ posts, currencies }: Props) {
           open={!!selectedPost}
           showShareButtons={true}
           onOpenChange={(open: boolean) => !open && setSelectedPost(null)}
+          userBrand={userBrand}
         />
       )}
     </>

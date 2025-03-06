@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { ThemeToggle } from "./ui/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";

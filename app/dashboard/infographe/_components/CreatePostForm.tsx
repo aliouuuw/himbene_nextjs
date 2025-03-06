@@ -18,6 +18,7 @@ import { useUploadThing } from '@/lib/uploadthing';
 import { Currency } from "@/types";
 import { fr } from 'date-fns/locale';
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 type WigFormData = {
   name: string;
@@ -27,6 +28,7 @@ type WigFormData = {
   sizeId: string;
   currencyId: string;
   qualityId: string;
+  brandIds: string[];
 };
 
 interface CreatePostFormProps {
@@ -46,7 +48,6 @@ export function CreatePostForm({
 }: CreatePostFormProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [files, setFiles] = useState<File[]>([]);
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [wigData, setWigData] = useState<WigFormData>({
     name: '',
@@ -56,6 +57,7 @@ export function CreatePostForm({
     sizeId: '',
     currencyId: currencies.find(c => c.isBase)?.id || currencies[0]?.id || '',
     qualityId: qualities[0]?.id || '',
+    brandIds: [],
   });
   const { startUpload } = useUploadThing("postMedia");
 
@@ -94,8 +96,8 @@ export function CreatePostForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBrand) {
-      toast.error('Veuillez sélectionner une marque');
+    if (wigData.brandIds.length === 0) {
+      toast.error('Veuillez sélectionner au moins une marque');
       return;
     }
 
@@ -121,7 +123,7 @@ export function CreatePostForm({
         content: wigData.description,
         mediaUrls,
         scheduledFor: date,
-        brandId: selectedBrand,
+        brandIds: wigData.brandIds,
         wigData: {
           ...wigData,
           imageUrls: mediaUrls,
@@ -140,8 +142,8 @@ export function CreatePostForm({
           sizeId: '',
           currencyId: currencies.find(c => c.isBase)?.id || currencies[0]?.id || '',  
           qualityId: qualities[0]?.id || '',
+          brandIds: [],
         });
-        setSelectedBrand('');
       } else {
         toast.error(result.error);
       }
@@ -182,22 +184,16 @@ export function CreatePostForm({
           />
         </div>
         <div className="space-y-2">
-        <Label htmlFor="brand">Sélectionner une marque</Label>
-        <Select
-          value={selectedBrand}
-          onValueChange={setSelectedBrand}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Choisir une marque" />
-          </SelectTrigger>
-          <SelectContent>
-            {brands.map((brand) => (
-              <SelectItem key={brand.id} value={brand.id}>
-                {brand.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label htmlFor="brands">Marques</Label>
+        <MultiSelect
+          options={brands.map(brand => ({
+            label: brand.name,
+            value: brand.id
+          }))}
+          selected={wigData.brandIds}
+          onChange={(selected) => setWigData(prev => ({ ...prev, brandIds: selected }))}
+          placeholder="Sélectionner des marques"
+        />
         <Label htmlFor="wigQuality">Qualité</Label>
         <Select
           value={wigData.qualityId}

@@ -102,7 +102,7 @@ model Brand {
   deletedAt   DateTime?
   isActive    Boolean   @default(true)
   users       UserBrand[] // Many-to-many relationship with users
-  posts       Post[]
+  posts       PostBrand[]  // Updated to use junction table
   wigs        Wig[]
 
   @@index([name])
@@ -123,8 +123,7 @@ model Post {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brandId      String
-  brand        Brand    @relation(fields: [brandId], references: [id])
+  brands       PostBrand[]  // Changed from single brand to many-to-many relationship
   content      String
   mediaUrls    Json?
   status       PostStatus
@@ -137,7 +136,18 @@ model Post {
   platformPosts PlatformPost[]
   sharedBy      SharedPost[]
 
-  @@index([userId, brandId, status])
+  @@index([userId, status])
+}
+
+// New junction table for Post-Brand many-to-many relationship
+model PostBrand {
+  postId    String
+  brandId   String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([postId, brandId])
 }
 
 enum PostStatus {

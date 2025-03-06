@@ -12,7 +12,7 @@ export type CreatePostInput = {
   content: string;
   mediaUrls: string[];
   scheduledFor?: Date;
-  brandId: string;
+  brandIds: string[];
   wigData: {
     name: string;
     description: string;
@@ -26,9 +26,11 @@ export type CreatePostInput = {
 };
 
 type PostWithRelations = Post & {
-  brand: {
-    name: string;
-  };
+  brands: {
+    brand: {
+      name: string;
+    };
+  }[];
   user: {
     name: string;
   };
@@ -54,52 +56,73 @@ type PostWithRelations = Post & {
   } | null;
 };
 
-export async function createDraftPost(input: CreatePostInput) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
-    return { success: false, error: "Unauthorized" };
-  }
-
+export async function createDraftPost(data: CreatePostInput) {
   try {
-    // Create the wig first
-    const wig = await prismaClient.wig.create({
-      data: {
-        name: input.wigData.name,
-        description: input.content,
-        basePrice: input.wigData.basePrice,
-        colorId: input.wigData.colorId,
-        sizeId: input.wigData.sizeId,
-        qualityId: input.wigData.qualityId,
-        currencyId: input.wigData.currencyId,
-        brandId: input.brandId,
-        imageUrls: input.wigData.imageUrls,
-        status: "ACTIVE",
-      },
-    });
+    const account = await getAuthenticatedUserFromDb();
+    if (!account) throw new Error('Not authenticated');
 
-    // Then create the post with the new wig
     const post = await prismaClient.post.create({
       data: {
-        content: input.content,
-        mediaUrls: input.mediaUrls,
-        scheduledFor: input.scheduledFor,
-        status: PostStatus.DRAFT,
-        userId: session.user.id,
-        brandId: input.brandId,
-        wigId: wig.id,
+        content: data.content,
+        mediaUrls: data.mediaUrls,
+        status: 'DRAFT',
+        scheduledFor: data.scheduledFor,
+        userId: account.id,
+        brands: {
+          create: data.brandIds.map(brandId => ({
+            brandId
+          }))
+        },
+        wigId: (await prismaClient.wig.create({
+          data: {
+            name: data.wigData.name,
+            description: data.wigData.description,
+            basePrice: data.wigData.basePrice,
+            colorId: data.wigData.colorId,
+            sizeId: data.wigData.sizeId,
+            currencyId: data.wigData.currencyId,
+            qualityId: data.wigData.qualityId,
+            imageUrls: data.wigData.imageUrls || [],
+            brandId: data.brandIds[0],
+          }
+        })).id
       },
+      include: {
+        user: true,
+        brands: {
+          include: {
+            brand: true
+          }
+        },
+        wig: {
+          include: {
+            color: true,
+            size: true,
+            quality: true,
+            currency: true,
+          }
+        }
+      }
     });
 
-    revalidatePath("/dashboard/commercial/home");
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/infographe/home");
+    // Serialize the post data before returning
+    const serializedPost = {
+      ...post,
+      wig: post.wig ? {
+        ...post.wig,
+        basePrice: Number(post.wig.basePrice),
+        currency: {
+          ...post.wig.currency,
+          rate: Number(post.wig.currency.rate)
+        }
+      } : null
+    };
 
-    return { success: true, data: post };
+    revalidatePath('/dashboard/infographe');
+    return { success: true, data: serializedPost };
   } catch (error) {
-    console.error("Failed to create post:", error);
-    return { success: false, error: "Failed to create post" };
+    console.error('Error creating draft post:', error);
+    return { success: false, error: 'Failed to create draft post' };
   }
 }
 
@@ -128,9 +151,9 @@ export async function getAdminPosts(): Promise<{
             name: true,
           },
         },
-        brand: {
-          select: {
-            name: true,
+        brands: {
+          include: {
+            brand: true,
           },
         },
         wig: {
@@ -159,137 +182,66 @@ export async function getCommercialDraftPosts(): Promise<{
   data?: PostWithRelations[];
   error?: string;
 }> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
   try {
-    if (!session) {
-      return { success: false, error: "Unauthorized" };
-    }
+    const account = await getAuthenticatedUserFromDb();
+    if (!account) throw new Error('Not authenticated');
 
-    // First, get the IDs of posts that the user has shared
-    const sharedPostIds = await prismaClient.sharedPost.findMany({
-      where: { userId: session.user.id },
-      select: { 
-        postId: true,
-        post: {
-          include: {
-            wig: {
-              include: {
-                color: {
-                  select: { name: true },
-                },
-                size: {
-                  select: { name: true },
-                },
-                quality: {
-                  select: { name: true },
-                },
-                currency: {
-                  select: {
-                    id: true,
-                    symbol: true,
-                    rate: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+    const userBrands = await prismaClient.userBrand.findMany({
+      where: { userId: account.id },
+      select: { brandId: true }
     });
 
-    const sharedIds = new Set(sharedPostIds.map((p) => p.postId));
+    const brandIds = userBrands.map(ub => ub.brandId);
 
     const posts = await prismaClient.post.findMany({
       where: {
-        status: PostStatus.DRAFT,
-        OR: [
-          {
-            brand: {
-              users: {
-                some: {
-                  userId: session.user.id,
-                },
-              },
-            },
-          },
-          {
-            user: {
-              role: UserRole.ADMIN,
-            },
-          },
-        ],
+        brands: {
+          some: {
+            brandId: {
+              in: brandIds
+            }
+          }
+        },
+        status: 'DRAFT'
       },
       include: {
-        user: {
-          select: {
-            name: true,
-          },
-        },
-        brand: {
-          select: {
-            name: true,
-          },
+        user: true,
+        brands: {
+          include: {
+            brand: true
+          }
         },
         wig: {
           include: {
-            color: {
-              select: { name: true },
-            },
-            size: {
-              select: { name: true },
-            },
-            currency: {
-              select: {
-                id: true,
-                symbol: true,
-                rate: true,
-              },
-            },
-            quality: {
-              select: {
-                id: true,
-                name: true,
-                orderIndex: true,
-              },
-            },
-          },
-        },
+            color: true,
+            size: true,
+            quality: true,
+            currency: true,
+          }
+        }
       },
       orderBy: {
-        createdAt: "desc",
-      },
+        createdAt: 'desc'
+      }
     });
 
-    const serializedPosts = posts.map((post) => ({
+    // Convert Decimal to number for serialization
+    const sanitizedPosts = posts.map(post => ({
       ...post,
-      isShared: sharedIds.has(post.id),
-      wig: post.wig
-        ? {
-            ...post.wig,
-            basePrice: post.wig.basePrice.toString(),
-            currency: {
-              id: post.wig.currency.id,
-              symbol: post.wig.currency.symbol,
-              rate: post.wig.currency.rate.toString(),
-            },
-            quality: {
-              id: post.wig.quality?.id,
-              name: post.wig.quality?.name,
-              orderIndex: post.wig.quality?.orderIndex,
-            },
-          }
-        : null,
+      wig: post.wig ? {
+        ...post.wig,
+        basePrice: Number(post.wig.basePrice),
+        currency: post.wig.currency ? {
+          ...post.wig.currency,
+          rate: Number(post.wig.currency.rate)
+        } : null
+      } : null
     }));
 
-    return {
-      success: true,
-      data: (serializedPosts as unknown) as PostWithRelations[],
-    };
+    return { success: true, data: sanitizedPosts as PostWithRelations[] };
   } catch (error) {
-    console.error("Failed to fetch draft posts:", error);
-    return { success: false, error: "Failed to fetch draft posts" };
+    console.error('Error fetching commercial posts:', error);
+    return { success: false, error: 'Failed to fetch posts' };
   }
 }
 
@@ -330,10 +282,15 @@ export async function getInfographePosts(): Promise<{
             name: true,
           },
         },
-        brand: {
-          select: {
-            name: true,
-          },
+        brands: {
+          include: {
+            brand: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
+          }
         },
         wig: {
           include: {
@@ -485,6 +442,7 @@ export async function updatePost(
     mediaUrls?: string[];
     scheduledFor?: Date | null;
     status?: PostStatus;
+    brandIds?: string[];
     wigData?: {
       name?: string;
       description?: string;
@@ -558,6 +516,22 @@ export async function updatePost(
       });
     }
 
+    // If brandIds are provided, update the post-brand relationships
+    if (data.brandIds) {
+      // Delete existing relationships
+      await prismaClient.postBrand.deleteMany({
+        where: { postId }
+      });
+
+      // Create new relationships
+      await prismaClient.postBrand.createMany({
+        data: data.brandIds.map(brandId => ({
+          postId,
+          brandId
+        }))
+      });
+    }
+
     // Update post
     const updatedPost = await prismaClient.post.update({
       where: { id: postId },
@@ -569,7 +543,11 @@ export async function updatePost(
       },
       include: {
         user: true,
-        brand: true,
+        brands: {
+          include: {
+            brand: true,
+          },
+        },
         wig: {
           include: {
             color: true,

@@ -18,7 +18,7 @@ import { usePathname } from "next/navigation";
 import { fr } from "date-fns/locale";
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
 import { useState } from "react";
-
+import { UserBrand } from "@prisma/client";
 interface PostCardProps {
   post: PostWithRelations;
   currencies?: Currency[];
@@ -27,6 +27,7 @@ interface PostCardProps {
   showShareButtons?: boolean;
   onEdit?: (post: PostWithRelations) => void;
   onDelete?: (postId: string) => void;
+  userBrand: UserBrand;
 }
 
 export function PostCard({
@@ -37,6 +38,7 @@ export function PostCard({
   showShareButtons = true,
   onEdit,
   onDelete,
+  userBrand,
 }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -53,6 +55,11 @@ export function PostCard({
   const pathname = usePathname();
   const isDashboardOrCommercial = pathname.includes("/dashboard/admin") || pathname.includes("/dashboard/commercial");
   //console.log(post);
+
+  const getAssociatedUserBrand = (post: PostWithRelations) => {
+    const brand = post.brands?.find(b => b.brand.id == userBrand.brandId);
+    return brand?.brand.name || 'No brand';
+  };
 
   return (
     <Card className="overflow-hidden border-none max-w-2xl">
@@ -100,10 +107,10 @@ export function PostCard({
           <div className="space-y-4">
             <div className="flex items-start justify-between pb-2">
               <div className="space-y-1">
-                {post.wig && (
+                {post.brands && post.brands.length > 0 && (
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">
-                      {post.brand.name}
+                      {getAssociatedUserBrand(post)}
                     </Badge>
                     <Badge variant="secondary" className="text-xs">
                       {post.wig.size?.name}

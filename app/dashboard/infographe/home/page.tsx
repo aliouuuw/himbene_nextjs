@@ -1,16 +1,16 @@
-import { getBrands, getCurrencies, getWigSizes, getWigColors, getWigQualities } from "@/app/actions/admin-actions";
+import { getBrands, getCurrencies, getWigSizes, getWigColors, getWigQualities, getUserBrand } from "@/app/actions/admin-actions";
 import { getInfographePosts } from "@/app/actions/post-actions";
 import { PostWithRelations, Currency } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InfographePostsList } from "./_components/infographe-posts-list";
 import { CreatePostButton } from "./_components/create-post-button";
 import { Separator } from "@/components/ui/separator";
-import { WigQuality } from "@prisma/client";
+import { WigQuality, Brand, UserBrand } from "@prisma/client";
 import { getAuthenticatedUsersAccount } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 // Create a reusable component for TabsContent
-function PostsTabsContent({ value, posts, currencies, qualities, error }: { value: string, posts: PostWithRelations[], currencies: Currency[], qualities: WigQuality[], error: string }) {
+function PostsTabsContent({ value, posts, currencies, qualities, brands, error, userBrand }: { value: string, posts: PostWithRelations[], currencies: Currency[], qualities: WigQuality[], brands: Brand[], error: string, userBrand: UserBrand }) {
     return (
         <TabsContent value={value} className="m-0">
             {posts.length > 0 ? (
@@ -18,6 +18,8 @@ function PostsTabsContent({ value, posts, currencies, qualities, error }: { valu
                     posts={posts}
                     currencies={currencies}
                     qualities={qualities}
+                    brands={brands}
+                    userBrand={userBrand as UserBrand}
                 />
             ) : (
                 <div className="flex items-center justify-center h-32">
@@ -38,6 +40,7 @@ export default async function InfographeHomePage() {
   if (passwordChangeRequired) {
     return redirect("/change-password");
   }
+  const userBrand = await getUserBrand();
     const [postsResult, rawCurrencies] = await Promise.all([
         getInfographePosts(),
         getCurrencies(),
@@ -68,9 +71,12 @@ export default async function InfographeHomePage() {
                 basePrice: Number(post.wig.basePrice),
                 currency: post.wig.currency as unknown as { id: string; symbol: string; rate: number },
                 quality: post.wig.quality as unknown as { id: string; name: string; orderIndex: number }
-            } : null
+            } : null,
+            brandIds: post.brands?.map(b => b.brand.name) || [],
+            brands: post.brands as unknown as { brand: { id: string; name: string } }[]
         })) || [])
         : [];
+
 
     return (
         <div className="h-full space-y-6 p-6">
@@ -120,6 +126,8 @@ export default async function InfographeHomePage() {
                             posts={posts} 
                             currencies={currencies} 
                             qualities={qualities}
+                            brands={brands}
+                            userBrand={userBrand as UserBrand}
                             error={postsResult.error || ""} 
                         />
                         <PostsTabsContent 
@@ -127,6 +135,8 @@ export default async function InfographeHomePage() {
                             posts={posts.filter(post => post.status === "DRAFT")} 
                             currencies={currencies} 
                             qualities={qualities}
+                            brands={brands}
+                            userBrand={userBrand as UserBrand}
                             error={postsResult.error || ""} 
                         />
                         <PostsTabsContent 
@@ -134,6 +144,8 @@ export default async function InfographeHomePage() {
                             posts={posts.filter(post => post.status === "PUBLISHED")} 
                             currencies={currencies} 
                             qualities={qualities}
+                            brands={brands}
+                            userBrand={userBrand as UserBrand}
                             error={postsResult.error || ""} 
                         />
                     </Tabs>

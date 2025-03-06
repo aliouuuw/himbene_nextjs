@@ -2,7 +2,7 @@
 'use server'
 
 import prismaClient from "@/lib/prisma-client";
-import { isAdmin, auth } from "@/lib/auth";
+import { isAdmin, auth, getAuthenticatedUserFromDb } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { fetchExchangeRates } from "@/lib/exchange-rates";
@@ -136,6 +136,16 @@ export async function createBrand(data: {
 export async function getBrands() {
 
   return await prismaClient.brand.findMany();
+}
+
+export async function getUserBrand() {
+  const user = await getAuthenticatedUserFromDb();
+  return await prismaClient.userBrand.findFirst({
+    where: { userId: user?.id },
+    include: {
+      brand: true
+    }
+  });
 }
 
 export async function deleteBrand(id: string) {

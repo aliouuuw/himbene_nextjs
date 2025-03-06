@@ -43,7 +43,7 @@ export async function sendTemporaryPasswordEmail(email: string, tempPassword: st
                 email: email,
                 name: "John Doe"
             }],
-            subject: "Hello world",
+            subject: "Bienvenue sur le site de Himbene",
             htmlContent: `<html><head></head><body><p>Hello,</p>Here is your temporary password: ${tempPassword}</p></body></html>`
         })
     });

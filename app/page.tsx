@@ -10,7 +10,11 @@ async function getLandingPagePosts() {
       createdAt: 'desc' // Show newest posts first
     },
     include: {
-      brand: true,
+      brands: {
+        include: {
+          brand: true
+        }
+      },
       wig: {
         include: {
           currency: true
@@ -21,7 +25,7 @@ async function getLandingPagePosts() {
 
   return posts.map(post => ({
     id: post.id,
-    title: post.wig?.name || post.brand.name,
+    title: post.wig?.name || post.brands[0]?.brand.name || 'No brand',
     price: post.wig?.basePrice ? Number(post.wig.basePrice) : null,
     currency: post.wig?.currency?.symbol || 'F',
     imageUrl: Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0

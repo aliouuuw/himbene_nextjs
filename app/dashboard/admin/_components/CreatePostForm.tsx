@@ -127,7 +127,7 @@ export function CreatePostForm({
         content,
         mediaUrls,
         scheduledFor: date,
-        brandId: selectedBrand,
+        brandIds: [selectedBrand],
         wigData: {
           ...wigData,
           imageUrls: mediaUrls,
