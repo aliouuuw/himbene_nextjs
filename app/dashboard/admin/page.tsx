@@ -9,7 +9,9 @@ import prismaClient from "@/lib/prisma-client";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ManagementTable } from "./_components/ManagementTable";
-
+import { CurrencyCode } from "@/lib/currency-utils";
+import { getCurrencyFlag } from "@/lib/currency-utils";
+import Image from "next/image";
 interface ManagementSection {
   title: string;
   description: string;
@@ -217,6 +219,9 @@ export default async function AdminPage() {
                   className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
                 >
                   <div className="flex items-center gap-2">
+                  <div>
+                    <Image src={getCurrencyFlag(currency.id as CurrencyCode)} alt={currency.id} width={20} height={20} />
+                  </div>
                     <span>{currency.symbol}</span>
                     <span className="font-medium">{currency.id}</span>
                   </div>
