@@ -17,7 +17,7 @@ enum UserRole {
 model User {
   id                 String   @id
   email              String   @unique
-  role               UserRole @default(COMMERCIAL)
+  role               UserRole
   name               String
   emailVerified      Boolean
   image              String?
@@ -81,6 +81,15 @@ model Verification {
   updatedAt  DateTime? @updatedAt
 
   @@map("verification")
+}
+
+model Jwks {
+  id         String   @id
+  publicKey  String
+  privateKey String
+  createdAt  DateTime @default(now())
+
+  @@map("jwks")
 }
 
 model Brand {

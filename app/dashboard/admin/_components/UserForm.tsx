@@ -38,9 +38,9 @@ export default function UserForm({ brands }: UserFormProps) {
     
     try {
       const result = await createUser({
-        email,
-        name,
-        role,
+        email: email,
+        name: name,
+        role: role,
         brandIds: selectedBrands
       });
       

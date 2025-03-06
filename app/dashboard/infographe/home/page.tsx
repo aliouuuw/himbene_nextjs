@@ -6,6 +6,8 @@ import { InfographePostsList } from "./_components/infographe-posts-list";
 import { CreatePostButton } from "./_components/create-post-button";
 import { Separator } from "@/components/ui/separator";
 import { WigQuality } from "@prisma/client";
+import { getAuthenticatedUsersAccount } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 // Create a reusable component for TabsContent
 function PostsTabsContent({ value, posts, currencies, qualities, error }: { value: string, posts: PostWithRelations[], currencies: Currency[], qualities: WigQuality[], error: string }) {
@@ -28,6 +30,14 @@ function PostsTabsContent({ value, posts, currencies, qualities, error }: { valu
 }
 
 export default async function InfographeHomePage() {
+  const account = await getAuthenticatedUsersAccount()
+  const passwordChangeRequired = account?.passwordChangeRequired
+  console.log("Password change required:", passwordChangeRequired);
+
+  /* Redirect to change password page if password change is required */
+  if (passwordChangeRequired) {
+    return redirect("/change-password");
+  }
     const [postsResult, rawCurrencies] = await Promise.all([
         getInfographePosts(),
         getCurrencies(),

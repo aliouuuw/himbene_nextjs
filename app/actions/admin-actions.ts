@@ -5,10 +5,11 @@ import { isAdmin, auth } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { fetchExchangeRates } from "@/lib/exchange-rates";
+import { sendTemporaryPasswordEmail } from "./email-actions";
 
 interface CreateUserData {
   email: string;
-  role: UserRole;
+  role: string;
   name: string;
   brandIds: string[];
 }
@@ -35,15 +36,14 @@ export async function createUser(data: CreateUserData) {
   try {
     // Generate a random password
     const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).toUpperCase().slice(-4);
-    
+    console.log("Create User with data:", {name: data.name, email: data.email, password: tempPassword, role: data.role});
     // Create the user using auth.api.signUpEmail
     const result = await auth.api.signUpEmail({
       body: {
         name: data.name,
         email: data.email,
         password: tempPassword,
-        role: data.role,
-        passwordChangeRequired: true
+        role: data.role
       }
     });
     
@@ -61,12 +61,27 @@ export async function createUser(data: CreateUserData) {
       });
     }
 
+    // Update the user with password change required
+    const account = await prismaClient.account.findFirst({
+      where: { userId: result.user.id }
+    });
+    
+    if (account) {
+      await prismaClient.account.update({
+        where: { id: account.id },
+        data: { passwordChangeRequired: true }
+      });
+    }
+
     // Get the complete user with brands
     const user = await prismaClient.user.findUnique({
       where: { id: result.user.id }
     });
 
-    revalidatePath('/admin/users');
+    // Send email to user with temporary password
+    await sendTemporaryPasswordEmail(user?.email as string, tempPassword);
+
+    revalidatePath('/dashboard/admin/users');
     return { 
       success: true, 
       data: user,
@@ -485,7 +500,7 @@ export async function deleteUser(userId: string) {
     }
   });
 
-  revalidatePath('/admin/users');
+  revalidatePath('/dashboard/admin/users');
   return { success: true };
 }
 

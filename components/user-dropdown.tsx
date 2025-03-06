@@ -18,7 +18,7 @@ export const UserDropdown = ({ session }: { session: any }) => {
     authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/sign-in");
+          router.refresh();
         },
         onError: () => {
           setIsSigningOut(false);

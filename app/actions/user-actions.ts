@@ -32,15 +32,15 @@ export async function updatePassword(newPassword: string) {
       headers: await headers()
     });
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return { success: false, error: 'Not authenticated' };
     }
     
     // Find the user account
     const account = await prismaClient.account.findFirst({
       where: {
-        accountId: session.user.email,
-        providerId: 'credentials'
+        userId: session.user.id,
+        providerId: 'credential'
       }
     });
     
@@ -48,11 +48,15 @@ export async function updatePassword(newPassword: string) {
       return { success: false, error: 'Account not found' };
     }
     
+    // Hash the password before storing it
+    const ctx = await auth.$context;
+    const hashedPassword = await ctx.password.hash(newPassword);
+    
     // Update the password and set passwordChangeRequired to false
     await prismaClient.account.update({
       where: { id: account.id },
       data: {
-        password: newPassword, // In production, hash this password
+        password: hashedPassword,
         passwordChangeRequired: false
       }
     });

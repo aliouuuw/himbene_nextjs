@@ -1,4 +1,3 @@
-import type React from "react"
 import { getAuthenticatedUserRole } from "../actions/user-actions"
 import { MobileNav } from "@/components/mobile-nav"
 import { SidebarNav } from "@/components/sidebar-nav"

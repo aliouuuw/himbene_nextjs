@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 
 async function testAuthentication() {
     const email = "wadealiou00@gmail.com";
-    const password = "wadealiou00";
+    const password = "*********";
     try {
         await auth.api.signInEmail({
             body: {
