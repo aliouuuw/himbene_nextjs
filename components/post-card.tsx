@@ -16,6 +16,9 @@ import {
 import { Button } from "./ui/button";
 import { usePathname } from "next/navigation";
 import { fr } from "date-fns/locale";
+import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
+import { useState } from "react";
+
 interface PostCardProps {
   post: PostWithRelations;
   currencies?: Currency[];
@@ -35,6 +38,7 @@ export function PostCard({
   onEdit,
   onDelete,
 }: PostCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const formatCurrency = (
     amount: number,
@@ -48,6 +52,7 @@ export function PostCard({
 
   const pathname = usePathname();
   const isDashboard = pathname.includes("/dashboard");
+  console.log(post);
 
   return (
     <Card className="overflow-hidden border-none max-w-2xl">
@@ -114,9 +119,20 @@ export function PostCard({
                   </div>
                 )}
                 {post.wig.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 italic pt-4">
-                    {post.wig.description}
-                  </p>
+                  <div className="space-y-2">
+                    <p className={`text-sm text-muted-foreground italic pt-4 ${!isExpanded && 'line-clamp-2'}`}>
+                      {post.wig.description}
+                    </p>
+                    {post.wig.description.length > 100 && (
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto text-xs"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                      >
+                        {isExpanded ? 'Voir moins' : 'Voir plus'}
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -128,7 +144,16 @@ export function PostCard({
             <div className="bg-muted/50 p-3 rounded-md">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Prix local</span>
-                <span className="text-lg font-semibold">
+                <span className="text-lg font-semibold flex items-center gap-2">
+                  {post.wig.currency?.id && (
+                    <Image 
+                      src={getCurrencyFlag(post.wig.currency.id as CurrencyCode)} 
+                      alt={post.wig.currency.id}
+                      width={20}
+                      height={15}
+                      className="rounded-sm"
+                    />
+                  )}
                   {formatCurrency(Number(post.wig.basePrice), {
                     symbol: post.wig.currency?.symbol,
                     rate: Number(post.wig.currency?.rate),
@@ -149,7 +174,14 @@ export function PostCard({
                           key={currency.id}
                           className="flex items-center justify-between bg-background/50 p-2 rounded"
                         >
-                          <span className="text-muted-foreground">
+                          <span className="text-muted-foreground flex items-center gap-2">
+                            <Image 
+                              src={getCurrencyFlag(currency.id as CurrencyCode)} 
+                              alt={currency.id}
+                              width={20}
+                              height={15}
+                              className="rounded-sm"
+                            />
                             {currency.name}
                           </span>
                           <span className="font-medium">

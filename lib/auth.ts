@@ -62,7 +62,7 @@ export const getAuthenticatedUsersAccount = async () => {
       passwordChangeRequired: true,
     },
     });
-    console.log("Account:", account);
+    //console.log("Account:", account);
     return account;
   } catch (error) {
     console.error("Error getting authenticated users account:", error);

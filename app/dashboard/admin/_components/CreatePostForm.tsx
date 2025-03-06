@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Brand, WigColor, WigSize } from '@prisma/client';
 import { useUploadThing } from '@/lib/uploadthing';
+import { getCurrencyFlag, CurrencyCode } from "@/lib/currency-utils";
 
 type Currency = {
   id: string;
@@ -220,6 +221,7 @@ export function CreatePostForm({
               />
               <Select
                 value={wigData.currencyId}
+                defaultValue={currencies.find(currency => currency.isBase)?.id} /* Set XOF as default currency */
                 onValueChange={(value) => handleWigDataChange('currencyId', value)}
               >
                 <SelectTrigger className="w-24">
@@ -228,7 +230,16 @@ export function CreatePostForm({
                 <SelectContent>
                   {currencies.map((currency) => (
                     <SelectItem key={currency.id} value={currency.id}>
-                      {currency.symbol}
+                      <div className="flex items-center gap-2">
+                        <Image 
+                          src={getCurrencyFlag(currency.id as CurrencyCode)} 
+                          alt={currency.id}
+                          width={20}
+                          height={15}
+                          className="rounded-sm"
+                        />
+                        {currency.symbol}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

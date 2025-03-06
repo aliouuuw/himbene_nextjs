@@ -14,8 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { createCurrency, updateCurrency } from "@/app/actions/admin-actions";
 import { toast } from "sonner";
-import { VALID_CURRENCIES } from "@/lib/currency-utils";
+import { CurrencyCode, getCurrencyFlag, VALID_CURRENCIES } from "@/lib/currency-utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Image from "next/image";
 
 interface CurrencyDialogProps {
   mode: "add" | "edit";
@@ -87,7 +88,16 @@ export function CurrencyDialog({ mode, currency, onSuccess, trigger }: CurrencyD
                 <SelectContent>
                   {Object.entries(VALID_CURRENCIES).map(([code, name]) => (
                     <SelectItem key={code} value={code}>
-                      {code} - {name}
+                      <div className="flex items-center gap-2">
+                        <Image 
+                          src={getCurrencyFlag(code as CurrencyCode)} 
+                          alt={code}
+                          width={20}
+                          height={15}
+                          className="rounded-sm"
+                        />
+                        {code} - {name.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -110,7 +120,7 @@ export function CurrencyDialog({ mode, currency, onSuccess, trigger }: CurrencyD
               id="symbol"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
-              placeholder="$"
+              placeholder="CFA"
               required
             />
           </div>

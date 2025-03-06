@@ -41,6 +41,7 @@ export type PostWithRelations = {
     sharedAt: Date;
   }[];
   isShared?: boolean;
+  scheduledFor: Date | null;
 }; 
 
 export type Currency = {

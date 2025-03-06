@@ -107,7 +107,7 @@ export function CommercialPostsList({ posts, currencies }: Props) {
           post={selectedPost}
           currencies={currencies}
           open={!!selectedPost}
-          showShareButtons={false}
+          showShareButtons={true}
           onOpenChange={(open: boolean) => !open && setSelectedPost(null)}
         />
       )}

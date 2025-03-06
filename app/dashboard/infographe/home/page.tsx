@@ -32,7 +32,7 @@ function PostsTabsContent({ value, posts, currencies, qualities, error }: { valu
 export default async function InfographeHomePage() {
   const account = await getAuthenticatedUsersAccount()
   const passwordChangeRequired = account?.passwordChangeRequired
-  console.log("Password change required:", passwordChangeRequired);
+  // console.log("Password change required:", passwordChangeRequired);
 
   /* Redirect to change password page if password change is required */
   if (passwordChangeRequired) {

@@ -17,6 +17,8 @@ import { Brand, WigColor, WigQuality, WigSize } from '@prisma/client';
 import { useUploadThing } from '@/lib/uploadthing';
 import { Currency } from "@/types";
 import { fr } from 'date-fns/locale';
+import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
+
 type WigFormData = {
   name: string;
   description: string;
@@ -52,7 +54,7 @@ export function CreatePostForm({
     basePrice: 0,
     colorId: '',
     sizeId: '',
-    currencyId: currencies[0]?.id || '',
+    currencyId: currencies.find(c => c.isBase)?.id || currencies[0]?.id || '',
     qualityId: qualities[0]?.id || '',
   });
   const { startUpload } = useUploadThing("postMedia");
@@ -136,7 +138,7 @@ export function CreatePostForm({
           basePrice: 0,
           colorId: '',
           sizeId: '',
-          currencyId: currencies[0]?.id || '',  
+          currencyId: currencies.find(c => c.isBase)?.id || currencies[0]?.id || '',  
           qualityId: qualities[0]?.id || '',
         });
         setSelectedBrand('');
@@ -241,7 +243,16 @@ export function CreatePostForm({
                 <SelectContent>
                   {currencies.map((currency) => (
                     <SelectItem key={currency.id} value={currency.id}>
-                      {currency.symbol}
+                      <div className="flex items-center gap-2">
+                        <Image 
+                          src={getCurrencyFlag(currency.id as CurrencyCode)} 
+                          alt={currency.id}
+                          width={20}
+                          height={15}
+                          className="rounded-sm"
+                        />
+                        {currency.symbol}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtDecode } from "jwt-decode";
-import { cookies } from "next/headers";
+// import { cookies } from "next/headers";
 import { getSessionCookie } from "better-auth/cookies";
 
 interface PayloadType {
@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
 
 		// Handle root dashboard access
 		if (pathname === "/dashboard") {
-			const cookieStore = await cookies();
+			// const cookieStore = await cookies();
 			if (userRole === "ADMIN") {
 				return NextResponse.redirect(new URL("/dashboard/admin", request.url));
 			} else if (userRole === "INFOGRAPHE") {
@@ -55,7 +55,7 @@ export async function middleware(request: NextRequest) {
 			} else if (userRole === "COMMERCIAL") {
 				return NextResponse.redirect(new URL("/dashboard/commercial/home", request.url));
 			}
-			cookieStore.delete("auth_token");
+			// cookieStore.delete("auth_token");
 			return NextResponse.redirect(new URL("/sign-in", request.url));
 		}
 

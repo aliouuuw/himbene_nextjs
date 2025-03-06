@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any*/
 'use server'
 
 import prismaClient from "@/lib/prisma-client";
@@ -12,13 +13,6 @@ interface CreateUserData {
   role: string;
   name: string;
   brandIds: string[];
-}
-
-interface BrandData {
-  name: string;
-  description: string;
-  logoUrl: string;
-  isActive: boolean;
 }
 
 interface CurrencyData {
@@ -117,16 +111,25 @@ export async function getUsers() {
   });
 }
 
-export async function createBrand(data: BrandData) {
+export async function createBrand(data: {
+  name: string;
+  description: string;
+  logoUrl: string;
+  isActive: boolean;
+}) {
   try {
-    const result = await prismaClient.brand.create({
-      data
+    const brand = await prismaClient.brand.create({
+      data: {
+        name: data.name,
+        description: data.description || null,
+        logoUrl: data.logoUrl || null, // Make sure this accepts the URL
+        isActive: data.isActive,
+      },
     });
-    revalidatePath("/dashboard/admin/brands");
-    return { success: true, data: result };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Failed to create brand" };
+    return { success: true, brand };
+  } catch (error: any) {
+    console.error("Error creating brand:", error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -148,17 +151,29 @@ export async function deleteBrand(id: string) {
   }
 }
 
-export async function updateBrand(id: string, data: BrandData) {
+export async function updateBrand(
+  id: string,
+  data: {
+    name: string;
+    description: string;
+    logoUrl: string;
+    isActive: boolean;
+  }
+) {
   try {
-    const result = await prismaClient.brand.update({
+    const brand = await prismaClient.brand.update({
       where: { id },
-      data
+      data: {
+        name: data.name,
+        description: data.description || null,
+        logoUrl: data.logoUrl || null, // Make sure this accepts the URL
+        isActive: data.isActive,
+      },
     });
-    revalidatePath("/dashboard/admin/brands");
-    return { success: true, data: result };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Failed to update brand" };
+    return { success: true, brand };
+  } catch (error: any) {
+    console.error("Error updating brand:", error);
+    return { success: false, error: error.message };
   }
 }
 

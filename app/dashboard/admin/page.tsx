@@ -1,93 +1,141 @@
 import { 
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { 
   Users, 
-  Share2, 
   PenTool, 
-  Palette, 
-  Ruler, 
-  Building2,
-  ArrowRight,
-  Currency,
-  Award
+  TrendingUp,
+  DollarSign,
+  Activity,
 } from "lucide-react";
-import prismaClient from "@/lib/prisma-client"; // Add this import for database access
+import prismaClient from "@/lib/prisma-client";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ManagementTable } from "./_components/ManagementTable";
+
+interface ManagementSection {
+  title: string;
+  description: string;
+  iconName: string;
+  href: string;
+  count: string;
+}
 
 // This makes the component a Server Component that can fetch data
 export default async function AdminPage() {
-  // Fetch all the counts from the database
-  const userCount = await prismaClient.user.count();
-  const brandCount = await prismaClient.brand.count();
+  // Fetch all the counts from the database related to the admin dashboard
+  const userCount = await prismaClient.user.count({
+    where: {
+      role: "ADMIN"
+    }
+  });
+  const brandCount = await prismaClient.brand.count({});
   const platformCount = await prismaClient.platformConnection.count();
   const postCount = await prismaClient.post.count();
   const colorCount = await prismaClient.wigColor.count();
   const sizeCount = await prismaClient.wigSize.count();
-  const currencyCount = await prismaClient.currency.count();
   const qualityCount = await prismaClient.wigQuality.count();
+
+  // Fetch additional statistics
+  const newUsersToday = await prismaClient.user.count({
+    where: {
+      createdAt: {
+        gte: new Date(new Date().setHours(0, 0, 0, 0))
+      }
+    }
+  });
+
+  const postsThisWeek = await prismaClient.post.count({
+    where: {
+      createdAt: {
+        gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      }
+    }
+  });
+
+  // Currency-related queries
+  const activeCurrencies = await prismaClient.currency.count();
+
+  const latestRateUpdates = await prismaClient.currency.findMany({
+    orderBy: { lastUpdated: 'desc' },
+    take: 5,
+    select: {
+      id: true,
+      rate: true,
+      lastUpdated: true,
+      symbol: true
+    }
+  });
+
+  // Find most used currency through wigs
+  const mostUsedCurrency = await prismaClient.wig.groupBy({
+    by: ['currencyId'],
+    _count: {
+      currencyId: true
+    },
+    orderBy: {
+      _count: {
+        currencyId: 'desc'
+      }
+    },
+    take: 1
+  });
+
+  // Default value if no results
+  const mostUsedCurrencyId = mostUsedCurrency.length > 0 ? mostUsedCurrency[0].currencyId : 'N/A';
+  const mostUsedCurrencyCount = mostUsedCurrency.length > 0 ? mostUsedCurrency[0]._count.currencyId : 0;
 
   const managementSections = [
     {
       title: "Utilisateurs",
       description: "Gérer les comptes utilisateurs et leurs permissions",
-      icon: Users,
+      iconName: "users",
       href: "/dashboard/admin/users",
       count: `${userCount} ${userCount === 1 ? "Utilisateur" : "Utilisateurs"}`
     },
     {
       title: "Posts",
       description: "Surveiller tous les posts sur la plateforme",
-      icon: PenTool,
+      iconName: "pen-tool",
       href: "/dashboard/admin/posts",
       count: `${postCount} ${postCount === 1 ? "Post" : "Posts"}`
     },
     {
       title: "Marques",
       description: "Gérer les marques et leurs détails",
-      icon: Building2,
+      iconName: "building-2",
       href: "/dashboard/admin/brands",
       count: `${brandCount} ${brandCount === 1 ? "Marque" : "Marques"}`
     },
     {
       title: "Couleurs",
       description: "Gérer les couleurs des cheveux",
-      icon: Palette,
+      iconName: "palette",
       href: "/dashboard/admin/colors",
       count: `${colorCount} ${colorCount === 1 ? "Couleur" : "Couleurs"}`
     },
     {
       title: "Tailles",
       description: "Gérer les tailles des cheveux",
-      icon: Ruler,
+      iconName: "ruler",
       href: "/dashboard/admin/sizes",
       count: `${sizeCount} ${sizeCount === 1 ? "Taille" : "Tailles"}`
     },
     {
       title: "Devises",
       description: "Gérer les devises et les taux de change",
-      icon: Currency,
+      iconName: "dollar-sign",
       href: "/dashboard/admin/currencies",
-      count: `${currencyCount} ${currencyCount === 1 ? "Devise" : "Devises"}`
+      count: `${activeCurrencies} ${activeCurrencies === 1 ? "Devise" : "Devises"}`
     },
     {
       title: "Qualités",
       description: "Gérer les qualités des cheveux",
-      icon: Award,
+      iconName: "award",
       href: "/dashboard/admin/qualities",
       count: `${qualityCount} ${qualityCount === 1 ? "Qualité" : "Qualités"}`
     },
     {
       title: "Plateformes",
       description: "Configurer les plateformes sociales",
-      icon: Share2,
+      iconName: "share-2",
       href: "/dashboard/admin/platforms",
       count: `${platformCount} ${platformCount === 1 ? "Plateforme" : "Plateformes"}`,
       isDisabled: true
@@ -99,44 +147,97 @@ export default async function AdminPage() {
       <div>
         <h1 className="text-2xl font-bold">Tableau de bord</h1>
         <p className="text-muted-foreground text-sm pt-3">
-          Gérer tous les aspects de votre plateforme de publication sur les réseaux sociaux
+          Vue d&apos;ensemble et gestion de votre plateforme
         </p>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Utilisateurs Totaux</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userCount}</div>
+            <p className="text-xs text-muted-foreground">
+              +{newUsersToday} aujourd&apos;hui
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Posts Cette Semaine</CardTitle>
+            <PenTool className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{postsThisWeek}</div>
+            <div className="flex items-center text-xs text-green-500">
+              <TrendingUp className="h-4 w-4 mr-1" />
+              +{Math.round((postsThisWeek / (postCount || 1)) * 100)}% vs. moyenne
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Devises Actives</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeCurrencies}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Devise la Plus Utilisée</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {mostUsedCurrencyId}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {mostUsedCurrencyCount} wigs
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Currency Rate Updates */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Dernières Mises à Jour des Taux</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {latestRateUpdates.length > 0 ? (
+              latestRateUpdates.map((currency) => (
+                <div 
+                  key={currency.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{currency.symbol}</span>
+                    <span className="font-medium">{currency.id}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span>{currency.rate.toFixed(4)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(currency.lastUpdated).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">Aucune mise à jour récente</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Separator />
 
-        <Table>
-          <TableCaption>Liste de toutes les sections de gestion</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Section</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead className="w-[100px]">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {managementSections.map((section) => (
-              <TableRow key={section.href} className={section.isDisabled ? "opacity-50 cursor-not-allowed" : ""}>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <section.icon className="h-4 w-4" />
-                    {section.title}
-                  </div>
-                </TableCell>
-                <TableCell>{section.description}</TableCell>
-                <TableCell>{section.count}</TableCell>
-                <TableCell>
-                  <Button disabled={section.isDisabled} variant="ghost" size="sm" asChild>
-                    <a href={section.href} className={section.isDisabled ? "pointer-events-none" : ""}>
-                      <ArrowRight className="h-4 w-4" />
-                    </a>
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <ManagementTable sections={managementSections as ManagementSection[]} />
     </div>
   );
 }

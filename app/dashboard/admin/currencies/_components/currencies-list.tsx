@@ -12,6 +12,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Currency } from "@prisma/client";
 import { CurrencyPreview } from "./currency-preview";
+import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
+import Image from "next/image";
 
 // Change the Currency import to a custom type
 type CurrencyWithNumberRate = Omit<Currency, 'rate'> & { rate: number };
@@ -84,7 +86,18 @@ export function CurrenciesList({ currencies }: { currencies: CurrencyWithNumberR
         <TableBody>
           {currencies.sort((a, b) => a.isBase ? -1 : b.isBase ? 1 : 0).map((currency) => (
             <TableRow key={currency.id}>
-              <TableCell className="font-medium">{currency.id}</TableCell>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  <Image 
+                    src={getCurrencyFlag(currency.id as CurrencyCode)} 
+                    alt={currency.id}
+                    width={24}
+                    height={18}
+                    className="rounded-sm"
+                  />
+                  {currency.id}
+                </div>
+              </TableCell>
               <TableCell>{currency.name}</TableCell>
               <TableCell>{currency.symbol}</TableCell>
               <TableCell>{currency.rate.toString()}</TableCell>

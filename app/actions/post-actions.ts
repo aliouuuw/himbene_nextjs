@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -169,7 +170,33 @@ export async function getCommercialDraftPosts(): Promise<{
     // First, get the IDs of posts that the user has shared
     const sharedPostIds = await prismaClient.sharedPost.findMany({
       where: { userId: session.user.id },
-      select: { postId: true },
+      select: { 
+        postId: true,
+        post: {
+          include: {
+            wig: {
+              include: {
+                color: {
+                  select: { name: true },
+                },
+                size: {
+                  select: { name: true },
+                },
+                quality: {
+                  select: { name: true },
+                },
+                currency: {
+                  select: {
+                    id: true,
+                    symbol: true,
+                    rate: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const sharedIds = new Set(sharedPostIds.map((p) => p.postId));
@@ -220,6 +247,13 @@ export async function getCommercialDraftPosts(): Promise<{
                 rate: true,
               },
             },
+            quality: {
+              select: {
+                id: true,
+                name: true,
+                orderIndex: true,
+              },
+            },
           },
         },
       },
@@ -239,6 +273,11 @@ export async function getCommercialDraftPosts(): Promise<{
               id: post.wig.currency.id,
               symbol: post.wig.currency.symbol,
               rate: post.wig.currency.rate.toString(),
+            },
+            quality: {
+              id: post.wig.quality?.id,
+              name: post.wig.quality?.name,
+              orderIndex: post.wig.quality?.orderIndex,
             },
           }
         : null,
@@ -498,9 +537,24 @@ export async function updatePost(
 
     // Update wig if wigData is provided
     if (data.wigData && post.wig) {
+      const wigUpdateData = {
+        name: data.wigData.name,
+        description: data.wigData.description,
+        basePrice: data.wigData.basePrice,
+        currencyId: data.wigData.currencyId,
+        colorId: data.wigData.colorId,
+        sizeId: data.wigData.sizeId,
+        qualityId: data.wigData.qualityId,
+      };
+
+      // Only include defined fields in the update
+      const cleanedWigData = Object.fromEntries(
+        Object.entries(wigUpdateData).filter(([_, value]) => value !== undefined)
+      );
+
       await prismaClient.wig.update({
         where: { id: post.wig.id },
-        data: data.wigData,
+        data: cleanedWigData,
       });
     }
 
@@ -520,6 +574,7 @@ export async function updatePost(
           include: {
             color: true,
             size: true,
+            quality: true,
             currency: true,
           },
         },
@@ -537,6 +592,7 @@ export async function updatePost(
               ...updatedPost.wig.currency,
               rate: Number(updatedPost.wig.currency.rate),
             },
+            quality: updatedPost.wig.quality,
           }
         : null,
     };
