@@ -81,6 +81,13 @@ export const isAdmin = async () => {
   return user?.role === "ADMIN";
 };
 
+export const isInfographe = async () => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) return false;
+  return session.user.role === "INFOGRAPHE";
+};
 
 export const signOut = async () => {
   await auth.api.signOut({
