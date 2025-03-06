@@ -10,7 +10,11 @@ async function getPosts() {
       createdAt: 'desc' // Show newest posts first
     },
     include: {
-      brand: true,
+      brands: {
+        include: {
+          brand: true  // Include the actual brand data
+        }
+      },
       wig: {
         include: {
           currency: true
@@ -21,7 +25,7 @@ async function getPosts() {
 
   return posts.map(post => ({
     id: post.id,
-    title: post.wig?.name || post.brand.name,
+    title: post.wig?.name || post.brands[0].brand.name,  // Access name through brand
     price: post.wig?.basePrice ? Number(post.wig.basePrice) : null,
     currency: post.wig?.currency?.symbol || 'F',
     imageUrl: Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0

@@ -5,16 +5,17 @@ import {
 } from "@/app/actions/post-actions";
 import { InfographePostsList } from "../../infographe/home/_components/infographe-posts-list";
 import { PostWithRelations } from "@/types";
-import { getCurrencies, getWigQualities, getBrands } from "@/app/actions/admin-actions";
-
+import { getCurrencies, getWigQualities, getBrands, getUserBrand   } from "@/app/actions/admin-actions";
+import { UserBrand } from "@prisma/client";
 export default async function PostsPage() {
-  const [drafts, published, scheduled, currenciesResult, qualitiesResult, brandsResult] = await Promise.all([
+  const [drafts, published, scheduled, currenciesResult, qualitiesResult, brandsResult, userBrand] = await Promise.all([
     getAdminPosts(),
     getPublishedPosts(),
     getScheduledPosts(),
     getCurrencies(),
     getWigQualities(),
     getBrands(),
+    getUserBrand(),
   ]);
 
   // Combine all posts
@@ -52,7 +53,7 @@ export default async function PostsPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Gestion des posts</h1>
       <div className="space-y-6">
-        <InfographePostsList posts={serializedPosts as unknown as PostWithRelations[]} currencies={currencies} qualities={qualitiesResult} brands={brandsResult}  />
+        <InfographePostsList posts={serializedPosts as unknown as PostWithRelations[]} currencies={currencies} qualities={qualitiesResult} brands={brandsResult} userBrand={userBrand as UserBrand} />
       </div>
     </div>
   );
