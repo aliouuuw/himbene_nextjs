@@ -57,7 +57,8 @@ export function PostCard({
   //console.log(post);
 
   const getAssociatedUserBrand = (post: PostWithRelations) => {
-    const brand = post.brands?.find(b => b.brand.id == userBrand.brandId);
+    if (!userBrand?.brandId) return 'No brand';
+    const brand = post.brands?.find(b => b.brand.id === userBrand.brandId);
     return brand?.brand.name || 'No brand';
   };
 
