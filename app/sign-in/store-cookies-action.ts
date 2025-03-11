@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 
-export async function storeToken(authToken: string) {
+export async function storeToken(authToken: string): Promise<boolean> {
   const cookieStore = await cookies();
   try {
     if (authToken) {
@@ -13,9 +13,9 @@ export async function storeToken(authToken: string) {
         sameSite: "strict",
       });
     }
-    return { success: true };
+    return true;
   } catch (error) {
     console.error("Error storing token:", error);
-    return { success: false };
+    return false;
   }
 }

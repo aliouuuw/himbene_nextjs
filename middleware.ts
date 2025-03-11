@@ -15,10 +15,18 @@ interface PayloadType {
   }
 
 export async function middleware(request: NextRequest) {
-	
 	const sessionCookie = getSessionCookie(request);
-	//console.log("sessionCookie", sessionCookie);
+	const { pathname } = request.nextUrl;
+
+	// Handle sign-in route first
+	if (pathname.startsWith("/sign-in")) {
+		if (sessionCookie) {
+			return NextResponse.redirect(new URL("/dashboard/", request.url));
+		}
+		return NextResponse.next();
+	}
 	
+	// Then check for session cookie for other routes
 	if (!sessionCookie) {
 		// Redirect to sign-in if no token found
 		return NextResponse.redirect(new URL("/sign-in", request.url));
@@ -43,7 +51,6 @@ export async function middleware(request: NextRequest) {
 
 		// Access user data from the token
 		const userRole = decodedToken.role || "";
-		const { pathname } = request.nextUrl;
 
 		// Handle root dashboard access
 		if (pathname === "/dashboard") {
@@ -79,16 +86,16 @@ export async function middleware(request: NextRequest) {
 				return NextResponse.redirect(new URL("/unauthorized", request.url));
 			}
 		}
-		
+
+		return NextResponse.next();
 	} catch (error) {
 		console.error("Token validation error:", error);
 		// Redirect to sign-in on token validation failure
 		return NextResponse.redirect(new URL("/sign-in", request.url));
 	}
-	return NextResponse.next();
 }
 
 // Define which paths the middleware should run on
 export const config = {
-	matcher: ["/dashboard", "/dashboard/:path*"],
+	matcher: ["/dashboard", "/dashboard/:path*", "/sign-in"],
 };
