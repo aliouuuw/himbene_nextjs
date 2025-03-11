@@ -28,6 +28,7 @@ interface PostCardProps {
   onEdit?: (post: PostWithRelations) => void;
   onDelete?: (postId: string) => void;
   userBrand: UserBrand;
+  isInfographic?: boolean;
 }
 
 export function PostCard({
@@ -39,6 +40,7 @@ export function PostCard({
   onEdit,
   onDelete,
   userBrand,
+  isInfographic = false,
 }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -57,9 +59,9 @@ export function PostCard({
   //console.log(post);
 
   const getAssociatedUserBrand = (post: PostWithRelations) => {
-    if (!userBrand?.brandId) return 'No brand';
+    if (!userBrand?.brandId) return 'No associated brand';
     const brand = post.brands?.find(b => b.brand.id === userBrand.brandId);
-    return brand?.brand.name || 'No brand';
+    return brand?.brand.name || 'No associated brand';
   };
 
   return (
@@ -108,11 +110,21 @@ export function PostCard({
           <div className="space-y-4">
             <div className="flex items-start justify-between pb-2">
               <div className="space-y-1">
-                {post.brands && post.brands.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {getAssociatedUserBrand(post)}
-                    </Badge>
+                <div className="flex items-center gap-2">
+                    {post.brands && post.brands.length > 0 && (
+                      <>
+                        {!isInfographic && (
+                          <Badge variant="secondary" className="text-xs">
+                            {getAssociatedUserBrand(post)}
+                          </Badge>
+                        )}
+                        {isInfographic && post.brands.map((brand) => (
+                          <Badge variant="secondary" className="text-xs" key={brand.brand.id}>
+                            {brand.brand.name}
+                          </Badge>
+                        ))}                 
+                      </>
+                    )}
                     <Badge variant="secondary" className="text-xs">
                       {post.wig.size?.name}
                     </Badge>
@@ -123,7 +135,6 @@ export function PostCard({
                       {post.wig.quality?.name}
                     </Badge>
                   </div>
-                )}
                 {post.wig.description && (
                   <div className="space-y-2">
                     <p className={`text-sm text-muted-foreground italic pt-4 ${!isExpanded && 'line-clamp-2'}`}>

@@ -30,6 +30,7 @@ import { PostWithRelations, Currency } from "@/types";
 import { fr } from "date-fns/locale";
 import { WigQuality, Brand, UserBrand } from "@prisma/client";
 import { Badge } from "@/components/ui/badge";
+import { Share } from "lucide-react";
 
 interface Props {
   posts: PostWithRelations[];
@@ -74,6 +75,7 @@ export function InfographePostsList({ posts, currencies, qualities, brands, user
               <TableHead>Perruque</TableHead>
               <TableHead>Créé le</TableHead>
               <TableHead>Médias</TableHead>
+              <TableHead>Partages</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -99,6 +101,12 @@ export function InfographePostsList({ posts, currencies, qualities, brands, user
                 </TableCell>
                 <TableCell>
                   {post.mediaUrls && Array.isArray(post.mediaUrls) ? post.mediaUrls.length : 0} fichier(s)
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <Share className="h-3 w-3" />
+                    <span>{post.sharedBy?.length || 0}</span>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>

@@ -21,11 +21,10 @@ interface ColorDialogProps {
     name: string;
     hexCode: string | null;
   };
-  onSuccess?: () => void;
   trigger?: React.ReactNode;
 }
 
-export function ColorDialog({ mode, color, onSuccess, trigger }: ColorDialogProps) {
+export function ColorDialog({ mode, color, trigger }: ColorDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(color?.name || "");
@@ -43,7 +42,6 @@ export function ColorDialog({ mode, color, onSuccess, trigger }: ColorDialogProp
       if (result.success) {
         toast.success(`Couleur ${mode === "add" ? "créée" : "modifiée"} avec succès`);
         setOpen(false);
-        onSuccess?.();
       } else {
         toast.error(result.error);
       }

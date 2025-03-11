@@ -39,11 +39,8 @@ export type PostWithRelations = {
       orderIndex: number;
     };
   } | null;
-  sharedBy?: {
-    userId: string;
-    sharedAt: Date;
-  }[];
-  isShared?: boolean;
+  sharedBy: { userId: string }[];
+  isShared: boolean;
   scheduledFor: Date | null;
 }; 
 

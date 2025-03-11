@@ -11,18 +11,8 @@ import Image from "next/image";
 export function BrandsList({ brands }: { brands: { id: string; name: string; description: string; logoUrl: string; isActive: boolean }[] }) {
   const router = useRouter();
 
-  const handleDelete = async (id: string) => {
-    await deleteBrand(id);
-    router.refresh();
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des marques</h1>
-        <BrandDialog mode="add" onSuccess={() => router.refresh()} />
-      </div>
-
+    <div>
       <Table>
         <TableCaption>Liste de toutes les marques</TableCaption>
         <TableHeader>
@@ -52,7 +42,7 @@ export function BrandsList({ brands }: { brands: { id: string; name: string; des
               </TableCell>
               <TableCell>{brand.description || '-'}</TableCell>
               <TableCell>
-                <Badge variant={brand.isActive ? "default" : "secondary"}>
+                <Badge variant={brand.isActive ? "active" : "secondary"}>
                   {brand.isActive ? "Actif" : "Inactif"}
                 </Badge>
               </TableCell>
@@ -63,7 +53,10 @@ export function BrandsList({ brands }: { brands: { id: string; name: string; des
                   onSuccess={() => router.refresh()}
                 />
                 <DeleteAlert 
-                  onConfirm={() => handleDelete(brand.id)}
+                  onConfirm={async () => {
+                    const result = await deleteBrand(brand.id);
+                    if (!result.success) throw new Error(result.error);
+                  }}
                   description="Cette action est irréversible. Cela supprimera définitivement la marque et ne pourra pas être annulée."
                 />
               </TableCell>

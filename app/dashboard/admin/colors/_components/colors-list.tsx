@@ -16,12 +16,7 @@ export function ColorsList({ colors }: { colors: { id: string; name: string; hex
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des couleurs</h1>
-        <ColorDialog mode="add" onSuccess={() => router.refresh()} />
-      </div>
-
+    <div>
       <Table>
         <TableCaption>Liste de toutes les couleurs de perruque</TableCaption>
         <TableHeader>
@@ -47,9 +42,6 @@ export function ColorsList({ colors }: { colors: { id: string; name: string; hex
                 <ColorDialog 
                   mode="edit" 
                   color={color} 
-                  onSuccess={() => {
-                    router.refresh();
-                  }}
                 />
                 <DeleteAlert 
                   onConfirm={() => handleDelete(color.id)}

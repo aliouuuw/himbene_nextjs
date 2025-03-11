@@ -1,3 +1,5 @@
+/*eslint-disable @typescript-eslint/no-explicit-any*/
+
 import { getCommercialDraftPosts } from "@/app/actions/post-actions";
 import { getCurrencies, getUserBrand } from "@/app/actions/admin-actions";
 import { PostWithRelations } from "@/types";
@@ -38,15 +40,17 @@ export default async function CommercialHomePage() {
             quality: post.wig.quality as unknown as { id: string; name: string; orderIndex: number }
         } : null,
         brandIds: post.brands?.map(b => b.brand.name) || [],
-        brands: post.brands as unknown as { brand: { id: string; name: string } }[]
+        brands: post.brands as unknown as { brand: { id: string; name: string } }[],
+        sharedBy: (post as any).sharedBy || [],
+        isShared: (post as any).sharedBy?.some((share: any) => share.userId === account?.id) || false
     })) || [])
     : [];
 
   //console.log(posts);
 
   // Filter posts based on shared status
-  const unsharedPosts = posts?.filter((post) => !post.isShared) || [];
-  const sharedPosts = posts?.filter((post) => post.isShared) || [];
+  const unsharedPosts = posts?.filter((post) => post.sharedBy.length === 0) || [];
+  const sharedPosts = posts?.filter((post) => post.sharedBy.length > 0) || [];
 
   return (
     <div className="space-y-8 p-6">

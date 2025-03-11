@@ -218,7 +218,8 @@ export async function getCommercialDraftPosts(): Promise<{
             quality: true,
             currency: true,
           }
-        }
+        },
+        sharedBy: true,
       },
       orderBy: {
         createdAt: 'desc'
@@ -312,6 +313,7 @@ export async function getInfographePosts(): Promise<{
             },
           },
         },
+        sharedBy: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -593,6 +595,22 @@ export async function markPostAsShared(postId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
+    // First check if the post is already shared by this user
+    const existingShare = await prismaClient.sharedPost.findUnique({
+      where: {
+        postId_userId: {
+          postId,
+          userId: session.user.id,
+        },
+      },
+    });
+
+    if (existingShare) {
+      // Post is already shared, return success without creating a new record
+      return { success: true, data: existingShare };
+    }
+
+    // If not already shared, create new shared post record
     const sharedPost = await prismaClient.sharedPost.create({
       data: {
         postId,

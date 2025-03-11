@@ -16,11 +16,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 interface DeleteAlertProps {
+  triggerButton?: React.ReactNode;
   onConfirm: () => Promise<void>;
   description?: string;
 }
 
-export function DeleteAlert({ onConfirm, description }: DeleteAlertProps) {
+export function DeleteAlert({ triggerButton, onConfirm, description }: DeleteAlertProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -28,11 +29,11 @@ export function DeleteAlert({ onConfirm, description }: DeleteAlertProps) {
     setLoading(true);
     try {
       await onConfirm();
-      toast.success("Deleted successfully");
+      toast.success("Supprimé avec succès");
       setOpen(false);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete");
+      toast.error("Échec de la suppression");
     } finally {
       setLoading(false);
     }
@@ -41,19 +42,21 @@ export function DeleteAlert({ onConfirm, description }: DeleteAlertProps) {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm">Delete</Button>
+        {triggerButton || (
+          <Button variant="destructive" size="sm">Supprimer</Button>
+        )}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
           <AlertDialogDescription>
-            {description || "This action cannot be undone."}
+            {description || "Cette action ne peut pas être annulée."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm} disabled={loading}>
-            {loading ? "Deleting..." : "Delete"}
+            {loading ? "Suppression..." : "Supprimer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

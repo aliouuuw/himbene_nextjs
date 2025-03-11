@@ -101,9 +101,9 @@ export function CommercialPostsList({ posts, currencies, userBrand }: Props) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => handleShare(post.id, post.isShared || false, e)}
+                    onClick={(e) => handleShare(post.id, post.sharedBy.length > 0, e)}
                   >
-                    {post.isShared ? (
+                    {post.sharedBy.length > 0 ? (
                       <Check className="h-4 w-4 text-green-500" />
                     ) : (
                       <Share className="h-4 w-4" />

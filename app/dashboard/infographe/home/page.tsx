@@ -1,3 +1,5 @@
+/*eslint-disable @typescript-eslint/no-explicit-any*/
+
 import { getBrands, getCurrencies, getWigSizes, getWigColors, getWigQualities, getUserBrand } from "@/app/actions/admin-actions";
 import { getInfographePosts } from "@/app/actions/post-actions";
 import { PostWithRelations, Currency } from "@/types";
@@ -8,19 +10,45 @@ import { Separator } from "@/components/ui/separator";
 import { WigQuality, Brand, UserBrand } from "@prisma/client";
 import { getAuthenticatedUsersAccount } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { LayoutGrid, List } from "lucide-react";
+import { InfographePostsGrid } from "./_components/infographe-posts-grid";
 
 // Create a reusable component for TabsContent
 function PostsTabsContent({ value, posts, currencies, qualities, brands, error, userBrand }: { value: string, posts: PostWithRelations[], currencies: Currency[], qualities: WigQuality[], brands: Brand[], error: string, userBrand: UserBrand }) {
     return (
         <TabsContent value={value} className="m-0">
             {posts.length > 0 ? (
-                <InfographePostsList 
-                    posts={posts}
-                    currencies={currencies}
-                    qualities={qualities}
-                    brands={brands}
-                    userBrand={userBrand as UserBrand}
-                />
+                <Tabs defaultValue="grid">
+                    <div className="flex justify-end mb-4">
+                        <TabsList>
+                            <TabsTrigger value="grid">
+                                <LayoutGrid className="h-4 w-4" />
+                            </TabsTrigger>
+                            <TabsTrigger value="list">
+                                <List className="h-4 w-4" />
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <TabsContent value="grid">
+                        <InfographePostsGrid 
+                            posts={posts}
+                            currencies={currencies}
+                            qualities={qualities}
+                            brands={brands}
+                            userBrand={userBrand}
+                        />
+                    </TabsContent>
+                    <TabsContent value="list">
+                        <InfographePostsList 
+                            posts={posts}
+                            currencies={currencies}
+                            qualities={qualities}
+                            brands={brands}
+                            userBrand={userBrand}
+                        />
+                    </TabsContent>
+                </Tabs>
             ) : (
                 <div className="flex items-center justify-center h-32">
                     <div className="text-center py-10 text-muted-foreground">No posts available</div>
@@ -73,7 +101,9 @@ export default async function InfographeHomePage() {
                 quality: post.wig.quality as unknown as { id: string; name: string; orderIndex: number }
             } : null,
             brandIds: post.brands?.map(b => b.brand.name) || [],
-            brands: post.brands as unknown as { brand: { id: string; name: string } }[]
+            brands: post.brands as unknown as { brand: { id: string; name: string } }[],
+            sharedBy: (post as any).sharedBy || [],
+            isShared: (post as any).sharedBy?.some((share: any) => share.userId === account?.id) || false
         })) || [])
         : [];
 
@@ -92,26 +122,12 @@ export default async function InfographeHomePage() {
                 <div className="flex items-center justify-between">
                     <Tabs defaultValue="all" className="w-full">
                         <div className="flex items-center justify-between mb-4">
-                            <TabsList className="bg-background">
-                                <TabsTrigger value="all" className="relative">
-                                    Tous les posts
-                                    <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
-                                        {posts.length}
-                                    </span>
-                                </TabsTrigger>
-                                <TabsTrigger value="drafts">
-                                    Brouillons
-                                    <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
-                                        {posts.filter(post => post.status === "DRAFT").length}
-                                    </span>
-                                </TabsTrigger>
-                                <TabsTrigger value="published">
-                                    Publiés
-                                    <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
-                                        {posts.filter(post => post.status === "PUBLISHED").length}
-                                    </span>
-                                </TabsTrigger>
-                            </TabsList>
+                            <div>
+                                Tous les posts
+                                <span className="ml-2 text-xs rounded-full bg-muted px-2 py-0.5">
+                                    {posts.length}
+                                </span>
+                            </div>
                             <CreatePostButton 
                                 currencies={currencies} 
                                 brands={brands} 
@@ -124,24 +140,6 @@ export default async function InfographeHomePage() {
                         <PostsTabsContent 
                             value="all" 
                             posts={posts} 
-                            currencies={currencies} 
-                            qualities={qualities}
-                            brands={brands}
-                            userBrand={userBrand as UserBrand}
-                            error={postsResult.error || ""} 
-                        />
-                        <PostsTabsContent 
-                            value="drafts" 
-                            posts={posts.filter(post => post.status === "DRAFT")} 
-                            currencies={currencies} 
-                            qualities={qualities}
-                            brands={brands}
-                            userBrand={userBrand as UserBrand}
-                            error={postsResult.error || ""} 
-                        />
-                        <PostsTabsContent 
-                            value="published" 
-                            posts={posts.filter(post => post.status === "PUBLISHED")} 
                             currencies={currencies} 
                             qualities={qualities}
                             brands={brands}

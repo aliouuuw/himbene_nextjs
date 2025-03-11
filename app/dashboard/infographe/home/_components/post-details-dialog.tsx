@@ -24,7 +24,7 @@ export function PostDetailsDialog({ post, currencies, open, onOpenChange, showSh
           <DialogTitle>Post commercial</DialogTitle>
         </DialogHeader>
         
-        <PostCard post={post} currencies={currencies} variant="default" showActions={false} showShareButtons={showShareButtons} userBrand={userBrand}/>
+        <PostCard post={post} currencies={currencies} variant="default" showActions={false} showShareButtons={showShareButtons} userBrand={userBrand} isInfographic={true} />
       </DialogContent>
     </Dialog>
   );

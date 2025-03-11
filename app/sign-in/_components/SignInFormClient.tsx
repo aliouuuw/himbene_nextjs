@@ -74,16 +74,16 @@ export function SignInFormClient({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Connexion</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Entrez vos identifiants pour vous connecter à votre compte
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignIn}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Adresse email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -95,12 +95,12 @@ export function SignInFormClient({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Mot de passe</Label>
                   <a
-                    href="#"
+                    href="/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    Mot de passe oublié ?
                   </a>
                 </div>
                 <Input
@@ -116,14 +116,8 @@ export function SignInFormClient({
                 <div className="text-green-500 text-sm">{logginMessage}</div>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Login"}
+                {isLoading ? "Connexion en cours..." : "Connexion"}
               </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
             </div>
           </form>
         </CardContent>
