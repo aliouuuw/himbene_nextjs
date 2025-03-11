@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PostWithRelations, Currency } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Share, Trash } from "lucide-react";
+import { Share, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import { deletePost } from "@/app/actions/post-actions";
 import { toast } from "sonner";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -36,6 +36,14 @@ interface Props {
 
 export function InfographePostsGrid({ posts, currencies, qualities, brands, userBrand }: Props) {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(null);
+  const [imageIndices, setImageIndices] = useState<Record<string, number>>(() => {
+    // Initialize indices for all posts
+    const initialIndices: Record<string, number> = {};
+    posts.forEach(post => {
+      initialIndices[post.id] = 0;
+    });
+    return initialIndices;
+  });
 
   const handleDelete = async (postId: string) => {
     try {
@@ -65,16 +73,66 @@ export function InfographePostsGrid({ posts, currencies, qualities, brands, user
         {posts.map((post) => (
           <Card key={post.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
             <div 
-              className="relative aspect-square cursor-pointer"
-              onClick={() => setSelectedPost(post)}
+              className="relative aspect-square cursor-pointer group"
+              onClick={() => {
+                setImageIndices(prev => ({ ...prev, [post.id]: 0 }));
+                setSelectedPost(post);
+              }}
             >
               {post.mediaUrls[0] ? (
-                <Image
-                  src={post.mediaUrls[0]}
-                  alt={post.wig?.name || "Post image"}
-                  fill
-                  className="object-cover transition-transform group-hover:scale-105"
-                />
+                <>
+                  <Image
+                    src={post.mediaUrls[imageIndices[post.id] || 0] || post.mediaUrls[0]}
+                    alt={post.wig?.name || "Post image"}
+                    fill
+                    className="object-cover transition-transform group-hover:scale-105"
+                  />
+                  {post.mediaUrls.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setImageIndices(prev => ({
+                            ...prev,
+                            [post.id]: prev[post.id] === 0 ? post.mediaUrls.length - 1 : (prev[post.id] || 0) - 1
+                          }));
+                        }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setImageIndices(prev => ({
+                            ...prev,
+                            [post.id]: prev[post.id] === post.mediaUrls.length - 1 ? 0 : (prev[post.id] || 0) + 1
+                          }));
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                        {post.mediaUrls.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setImageIndices(prev => ({
+                                ...prev,
+                                [post.id]: index
+                              }));
+                            }}
+                            className={`h-1.5 rounded-full transition-all ${
+                              (imageIndices[post.id] || 0) === index ? "w-4 bg-white" : "w-1.5 bg-white/50"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">
                   Pas d&apos;image

@@ -43,34 +43,34 @@ export function SignInFormClient({
         {
           onSuccess: async (ctx) => {
             if (!ctx || !ctx.response) {
-              setError("Invalid response from server");
+              setError("Réponse invalide du serveur");
               return;
             }
 
             const authToken = ctx.response.headers.get("set-auth-token");
             if (!authToken) {
-              setError("No authentication token received");
+              setError("Aucun jeton d'authentification reçu");
               return;
             }
 
             try {
               await storeToken(authToken);
-              setLogginMessage("Login successful");
+              setLogginMessage("Connexion réussie");
               window.location.href = "/dashboard";
             } catch (err) {
               console.error("Failed to store authentication token:", err);
-              setError("Failed to store authentication token");
+              setError("Échec de l'enregistrement du jeton d'authentification");
             }
           },
         }
       );
 
       if (response.error) {
-        setError(response.error.message || "Failed to sign in");
+        setError(response.error.message || "Échec de la connexion");
       }
     } catch (err) {
-      console.error("Sign in error:", err);
-      setError("An error occurred during sign in");
+      console.error("Erreur de connexion:", err);
+      setError("Une erreur est survenue lors de la connexion");
     } finally {
       setIsLoading(false);
     }
