@@ -19,6 +19,8 @@ import { fr } from "date-fns/locale";
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
 import { useState } from "react";
 import { UserBrand } from "@prisma/client";
+import { Expand } from "lucide-react";
+
 interface PostCardProps {
   post: PostWithRelations;
   currencies?: Currency[];
@@ -43,6 +45,7 @@ export function PostCard({
   isInfographic = false,
 }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedImageIndex, setExpandedImageIndex] = useState<number | null>(null);
 
   const formatCurrency = (
     amount: number,
@@ -91,14 +94,31 @@ export function PostCard({
                 {(post.mediaUrls as string[]).map((url, index) => (
                   <div
                     key={index}
-                    className="relative aspect-square w-[200px] flex-shrink-0 rounded-md overflow-hidden snap-center"
+                    className={`group relative aspect-square flex-shrink-0 rounded-md overflow-hidden snap-center transition-all duration-300 cursor-pointer ${
+                      expandedImageIndex === index 
+                        ? 'w-full max-w-none z-10' 
+                        : expandedImageIndex !== null 
+                          ? 'w-[100px]' 
+                          : 'w-[200px]'
+                    }`}
+                    onClick={() => setExpandedImageIndex(expandedImageIndex === index ? null : index)}
                   >
                     <Image
                       src={url}
                       alt={`${post.wig?.name || "Product"} image ${index + 1}`}
                       fill
-                      className="object-cover transition-transform hover:scale-105"
+                      sizes="100%"
+                      className={`transition-transform group-hover:scale-105 ${
+                        expandedImageIndex === index 
+                          ? 'w-full max-w-none object-contain' 
+                          : expandedImageIndex !== null 
+                            ? 'w-[100px] object-cover' 
+                            : 'w-[200px] object-cover'
+                      }`}
                     />
+                    <div className="absolute top-2 right-2 bg-background/80 rounded-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Expand className="h-4 w-4" />
+                    </div>
                   </div>
                 ))}
               </div>
