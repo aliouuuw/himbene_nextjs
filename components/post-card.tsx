@@ -19,7 +19,7 @@ import { fr } from "date-fns/locale";
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
 import { useState } from "react";
 import { UserBrand } from "@prisma/client";
-import { Expand } from "lucide-react";
+import { Expand, Minimize2 } from "lucide-react";
 
 interface PostCardProps {
   post: PostWithRelations;
@@ -117,7 +117,7 @@ export function PostCard({
                       }`}
                     />
                     <div className="absolute top-2 right-2 bg-background/80 rounded-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Expand className="h-4 w-4" />
+                      {expandedImageIndex === index ? <Minimize2 className="h-4 w-4" />  : <Expand className="h-4 w-4" />}
                     </div>
                   </div>
                 ))}
