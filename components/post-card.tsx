@@ -4,22 +4,34 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostWithRelations, Currency } from "@/types";
 import {
+  EmailShareButton,
   FacebookShareButton,
-  TwitterShareButton,
   LinkedinShareButton,
+  PinterestIcon,
   PinterestShareButton,
+  RedditShareButton,
+  TelegramShareButton,
+  TumblrShareButton,
+  TwitterShareButton,
+  WhatsappShareButton,
   FacebookIcon,
   TwitterIcon,
   LinkedinIcon,
-  PinterestIcon,
-} from "next-share";
+  RedditIcon,
+  TelegramIcon,
+  TumblrIcon,
+  WhatsappIcon,
+  EmailIcon,
+  ThreadsShareButton,
+  ThreadsIcon,
+} from "react-share";
 import { Button } from "./ui/button";
 import { usePathname } from "next/navigation";
 import { fr } from "date-fns/locale";
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
 import { useState } from "react";
 import { UserBrand } from "@prisma/client";
-import { Expand, Minimize2 } from "lucide-react";
+import { Expand, Minimize2, Download } from "lucide-react";
 
 interface PostCardProps {
   post: PostWithRelations;
@@ -107,7 +119,7 @@ export function PostCard({
                       src={url}
                       alt={`${post.wig?.name || "Product"} image ${index + 1}`}
                       fill
-                      sizes="100%"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className={`transition-transform group-hover:scale-105 ${
                         expandedImageIndex === index 
                           ? 'w-full max-w-none object-contain' 
@@ -116,8 +128,32 @@ export function PostCard({
                             : 'w-[200px] object-cover'
                       }`}
                     />
-                    <div className="absolute top-2 right-2 bg-background/80 rounded-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {expandedImageIndex === index ? <Minimize2 className="h-4 w-4" />  : <Expand className="h-4 w-4" />}
+                    <div className="absolute top-2 left-2 flex gap-2 bg-background/80 rounded-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation(); // Prevent image expansion when clicking download
+                          try {
+                            const response = await fetch(url);
+                            const blob = await response.blob();
+                            const downloadUrl = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = downloadUrl;
+                            a.download = `${post.wig?.name || 'image'}-${index + 1}.jpg`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(downloadUrl);
+                          } catch (error) {
+                            console.error('Error downloading image:', error);
+                          }
+                        }}
+                        className="hover:text-primary"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="absolute top-2 right-2 flex gap-2 bg-background/80 rounded-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {expandedImageIndex === index ? <Minimize2 className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
                     </div>
                   </div>
                 ))}
@@ -271,15 +307,33 @@ export function PostCard({
                 <TwitterShareButton url={shareUrl}>
                   <TwitterIcon size={32} round />
                 </TwitterShareButton>
+                <WhatsappShareButton url={shareUrl}>
+                  <WhatsappIcon size={32} round />
+                </WhatsappShareButton>
                 <LinkedinShareButton url={shareUrl}>
                   <LinkedinIcon size={32} round />
                 </LinkedinShareButton>
+                <ThreadsShareButton url={shareUrl}>
+                  <ThreadsIcon size={32} round />
+                </ThreadsShareButton>
+                <RedditShareButton url={shareUrl}>
+                  <RedditIcon size={32} round />
+                </RedditShareButton>
+                <TelegramShareButton url={shareUrl}>
+                  <TelegramIcon size={32} round />
+                </TelegramShareButton>
                 <PinterestShareButton
                   url={shareUrl}
                   media={(post.mediaUrls as string[])?.[0] || ""}
                 >
                   <PinterestIcon size={32} round />
                 </PinterestShareButton>
+                <TumblrShareButton url={shareUrl}>
+                  <TumblrIcon size={32} round />
+                </TumblrShareButton>
+                <EmailShareButton url={shareUrl}>
+                  <EmailIcon size={32} round />
+                </EmailShareButton>
               </div>
             </div>
           )}

@@ -38,7 +38,7 @@ const PostItem = ({ post, currencies, userBrand }: PostItemProps) => {
               src={post.mediaUrls[imageIndices[post.id] || 0] || post.mediaUrls[0]}
               alt={post.wig?.name || "Post image"}
               fill
-              className="object-cover transition-transform group-hover:scale-105 rounded-md"
+              className="object-contain transition-transform group-hover:scale-105 rounded-md"
             />
             {post.mediaUrls.length > 1 && (
               <>

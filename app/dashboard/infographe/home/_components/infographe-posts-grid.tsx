@@ -85,7 +85,7 @@ export function InfographePostsGrid({ posts, currencies, qualities, brands, user
                     src={post.mediaUrls[imageIndices[post.id] || 0] || post.mediaUrls[0]}
                     alt={post.wig?.name || "Post image"}
                     fill
-                    className="object-cover transition-transform group-hover:scale-105"
+                    className="object-contain transition-transform group-hover:scale-105"
                   />
                   {post.mediaUrls.length > 1 && (
                     <>

@@ -5,6 +5,9 @@ import { PostWithRelations } from "@/types";
 import { getCurrencies, getUserBrand } from "@/app/actions/admin-actions";
 import { ClientPostDisplay } from "./client-post-display";
 import { UserBrand } from "@prisma/client";
+import Link from "next/link";
+import { ArrowLeftIcon } from "lucide-react";
+
 export async function generateMetadata(
   { params }: { params: Promise<{ postId: string }> }
 ): Promise<Metadata> {
@@ -128,7 +131,11 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
   const userBrand = await getUserBrand();
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-8 flex flex-col items-center">
+    <div className="relative max-w-4xl mx-auto p-4 space-y-8 flex flex-col items-center">
+      <Link href="/posts" className="absolute top-2 left-0 text-blue-500 hover:text-blue-600 flex items-center gap-2">
+        <ArrowLeftIcon className="w-4 h-4" />
+        Retour
+      </Link>
       <ClientPostDisplay post={serializedPost} currencies={currencies} userBrand={userBrand as UserBrand} />
     </div>
   );
