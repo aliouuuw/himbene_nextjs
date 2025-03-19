@@ -131,7 +131,7 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
   const userBrand = await getUserBrand();
 
   return (
-    <div className="relative max-w-4xl mx-auto p-4 space-y-8 flex flex-col items-center">
+    <div className="relative max-w-4xl mx-auto p-4 flex flex-col items-center">
       <Link href="/posts" className="absolute top-2 left-0 text-blue-500 hover:text-blue-600 flex items-center gap-2">
         <ArrowLeftIcon className="w-4 h-4" />
         Retour
