@@ -14,10 +14,25 @@ interface PayloadType {
 	sub: string
   }
 
-export async function middleware(request: NextRequest) {
-	const sessionCookie = getSessionCookie(request);
-	const { pathname } = request.nextUrl;
+// Add this constant at the top of the file
+const PAYWALL_ENABLED = true; // You can toggle this when payment is received
 
+export async function middleware(request: NextRequest) {
+	const { pathname } = request.nextUrl;
+	
+	// Allow access to the paywall page
+	if (pathname === "/paywall") {
+		return NextResponse.next();
+	}
+
+	// If paywall is enabled, redirect all protected routes to paywall
+	if (PAYWALL_ENABLED && (pathname.startsWith("/dashboard") || pathname === "/posts" || pathname === "/sign-in")) {
+		return NextResponse.redirect(new URL("/paywall", request.url));
+	}
+
+	// Rest of your existing middleware code
+	const sessionCookie = getSessionCookie(request);
+	
 	// Handle sign-in route first
 	if (pathname.startsWith("/sign-in")) {
 		if (sessionCookie) {
@@ -97,5 +112,5 @@ export async function middleware(request: NextRequest) {
 
 // Define which paths the middleware should run on
 export const config = {
-	matcher: ["/dashboard", "/dashboard/:path*", "/sign-in"],
+	matcher: ["/dashboard", "/dashboard/:path*", "/sign-in", "/paywall", "/posts"],
 };

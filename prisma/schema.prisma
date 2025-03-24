@@ -297,3 +297,10 @@ model WigQuality {
 
   @@index([orderIndex])
 }
+
+model PaywallDeadline {
+  id        String   @id @default(cuid())
+  deadline  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
