@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,8 @@ export function SignInFormClient({
   const [isLoading, setIsLoading] = useState(false);
   const [logginMessage, setLogginMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -56,7 +59,7 @@ export function SignInFormClient({
             try {
               await storeToken(authToken);
               setLogginMessage("Connexion réussie");
-              window.location.href = "/dashboard";
+              router.refresh()
             } catch (err) {
               console.error("Failed to store authentication token:", err);
               setError("Échec de l'enregistrement du jeton d'authentification");

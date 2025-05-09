@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtDecode } from "jwt-decode";
 // import { cookies } from "next/headers";
 import { getSessionCookie } from "better-auth/cookies";
+import { cookies } from "next/headers";
 
 interface PayloadType {
 	id: string,
@@ -15,10 +16,11 @@ interface PayloadType {
   }
 
 // Add this constant at the top of the file
-const PAYWALL_ENABLED = true; // You can toggle this when payment is received
+const PAYWALL_ENABLED = false; // You can toggle this when payment is received
 
 export async function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
+	console.log("Middleware running, pathname", pathname);
 	
 	// Allow access to the paywall page
 	if (pathname === "/paywall") {
@@ -26,7 +28,7 @@ export async function middleware(request: NextRequest) {
 	}
 
 	// If paywall is enabled, redirect all protected routes to paywall
-	if (PAYWALL_ENABLED && (pathname.startsWith("/dashboard") || pathname === "/posts" || pathname === "/sign-in")) {
+	if (PAYWALL_ENABLED && (pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname === "/posts" || pathname === "/sign-in")) {
 		return NextResponse.redirect(new URL("/paywall", request.url));
 	}
 
@@ -44,6 +46,7 @@ export async function middleware(request: NextRequest) {
 	// Then check for session cookie for other routes
 	if (!sessionCookie) {
 		// Redirect to sign-in if no token found
+		console.log("No token found, redirecting to sign-in");
 		return NextResponse.redirect(new URL("/sign-in", request.url));
 	}
 	
@@ -68,8 +71,8 @@ export async function middleware(request: NextRequest) {
 		const userRole = decodedToken.role || "";
 
 		// Handle root dashboard access
-		if (pathname === "/dashboard") {
-			// const cookieStore = await cookies();
+		if (pathname === "/dashboard/") {
+			const cookieStore = await cookies();
 			if (userRole === "ADMIN") {
 				return NextResponse.redirect(new URL("/dashboard/admin", request.url));
 			} else if (userRole === "INFOGRAPHE") {
@@ -77,7 +80,7 @@ export async function middleware(request: NextRequest) {
 			} else if (userRole === "COMMERCIAL") {
 				return NextResponse.redirect(new URL("/dashboard/commercial/home", request.url));
 			}
-			// cookieStore.delete("auth_token");
+			cookieStore.delete("auth_token");
 			return NextResponse.redirect(new URL("/sign-in", request.url));
 		}
 

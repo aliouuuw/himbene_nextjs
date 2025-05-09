@@ -23,7 +23,7 @@ export default function Home() {
           <div className="flex gap-4 justify-center">
             <Link
               href="/sign-in"
-              className="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              className="bg-primary text-white dark:text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
               Se connecter
             </Link>
