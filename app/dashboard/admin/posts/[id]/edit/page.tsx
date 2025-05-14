@@ -9,11 +9,15 @@ import { PostWithRelations } from "@/types";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+interface PageProps {
+  params: {
+    id: string
+  }
+}
+
 export default async function EditPostPage({
   params,
-}: {
-  params: { id: string };
-}) {
+}: PageProps) {
   const post = await getPostById(params.id);
   
   if (!post) {
