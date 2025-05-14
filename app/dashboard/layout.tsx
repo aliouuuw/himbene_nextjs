@@ -22,7 +22,7 @@ export default async function DashboardLayout({
         <MobileNav userRole={userRole} />
         
         {/* Content area with padding that adjusts for mobile */}
-        <main className="flex-1 overflow-y-auto p-4 md:py-8 md:px-8">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:py-4 md:px-8">{children}</main>
       </div>
     </div>
   );

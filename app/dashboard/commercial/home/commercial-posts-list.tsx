@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { PostDetailsDialog } from "@/app/dashboard/infographe/home/_components/post-details-dialog";
 import {
   Table,
   TableBody,
@@ -18,6 +17,7 @@ import { markPostAsShared, unmarkPostAsShared } from "@/app/actions/post-actions
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { UserBrand } from "@prisma/client";
+import { PostDetailsDialog } from "@/components/post-details-dialog";
 
 interface Props {
   posts: PostWithRelations[];

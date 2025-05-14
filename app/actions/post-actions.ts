@@ -1,16 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { revalidatePath } from "next/cache";
 import prismaClient from "@/lib/prisma-client";
-import { Post, PostStatus, UserRole } from "@prisma/client";
+import { PostStatus, UserRole } from "@prisma/client";
 import { getAuthenticatedUserFromDb } from "@/lib/auth";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { PostWithRelations } from "@/types";
 
 export type CreatePostInput = {
   content: string;
   mediaUrls: string[];
+  typeId: string;
   scheduledFor?: Date;
   brandIds: string[];
   wigData: {
@@ -25,74 +26,47 @@ export type CreatePostInput = {
   };
 };
 
-type PostWithRelations = Post & {
-  brands: {
-    brand: {
-      name: string;
-    };
-  }[];
-  user: {
-    name: string;
-  };
-  wig?: {
-    id: string;
-    name: string;
-    description: string | null;
-    basePrice: string;
-    currencyId: string;
-    currency: {
-      symbol: string;
-      rate: string;
-    };
-    color: {
-      name: string;
-    };
-    size: {
-      name: string;
-    };
-    quality: {
-      name: string;
-    };
-  } | null;
-};
-
 export async function createDraftPost(data: CreatePostInput) {
   try {
     const account = await getAuthenticatedUserFromDb();
-    if (!account) throw new Error('Not authenticated');
+    if (!account || account.role !== UserRole.ADMIN)
+      throw new Error("Not authenticated");
 
     const post = await prismaClient.post.create({
       data: {
         content: data.content,
         mediaUrls: data.mediaUrls,
-        status: 'DRAFT',
+        typeId: data.typeId,
+        status: "DRAFT",
         scheduledFor: data.scheduledFor,
         userId: account.id,
         brands: {
-          create: data.brandIds.map(brandId => ({
-            brandId
-          }))
+          create: data.brandIds.map((brandId) => ({
+            brandId,
+          })),
         },
-        wigId: (await prismaClient.wig.create({
-          data: {
-            name: data.wigData.name,
-            description: data.wigData.description,
-            basePrice: data.wigData.basePrice,
-            colorId: data.wigData.colorId,
-            sizeId: data.wigData.sizeId,
-            currencyId: data.wigData.currencyId,
-            qualityId: data.wigData.qualityId,
-            imageUrls: data.wigData.imageUrls || [],
-            brandId: data.brandIds[0],
-          }
-        })).id
+        wigId: (
+          await prismaClient.wig.create({
+            data: {
+              name: data.wigData.name,
+              description: data.wigData.description,
+              basePrice: data.wigData.basePrice,
+              colorId: data.wigData.colorId,
+              sizeId: data.wigData.sizeId,
+              currencyId: data.wigData.currencyId,
+              qualityId: data.wigData.qualityId,
+              imageUrls: data.wigData.imageUrls || [],
+              brandId: data.brandIds[0],
+            },
+          })
+        ).id,
       },
       include: {
         user: true,
         brands: {
           include: {
-            brand: true
-          }
+            brand: true,
+          },
         },
         wig: {
           include: {
@@ -100,29 +74,32 @@ export async function createDraftPost(data: CreatePostInput) {
             size: true,
             quality: true,
             currency: true,
-          }
-        }
-      }
+          },
+        },
+        type: true,
+      },
     });
 
     // Serialize the post data before returning
     const serializedPost = {
       ...post,
-      wig: post.wig ? {
-        ...post.wig,
-        basePrice: Number(post.wig.basePrice),
-        currency: {
-          ...post.wig.currency,
-          rate: Number(post.wig.currency.rate)
-        }
-      } : null
+      wig: post.wig
+        ? {
+            ...post.wig,
+            basePrice: Number(post.wig.basePrice),
+            currency: {
+              ...post.wig.currency,
+              rate: Number(post.wig.currency.rate),
+            },
+          }
+        : null,
     };
 
-    revalidatePath('/dashboard/infographe');
+    revalidatePath("/dashboard/infographe");
     return { success: true, data: serializedPost };
   } catch (error) {
-    console.error('Error creating draft post:', error);
-    return { success: false, error: 'Failed to create draft post' };
+    console.error("Error creating draft post:", error);
+    return { success: false, error: "Failed to create draft post" };
   }
 }
 
@@ -161,9 +138,11 @@ export async function getAdminPosts(): Promise<{
             color: true,
             size: true,
             currency: true,
+            quality: true,
           },
         },
         sharedBy: true,
+        type: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -184,32 +163,32 @@ export async function getCommercialDraftPosts(): Promise<{
 }> {
   try {
     const account = await getAuthenticatedUserFromDb();
-    if (!account) throw new Error('Not authenticated');
+    if (!account) throw new Error("Not authenticated");
 
     const userBrands = await prismaClient.userBrand.findMany({
       where: { userId: account.id },
-      select: { brandId: true }
+      select: { brandId: true },
     });
 
-    const brandIds = userBrands.map(ub => ub.brandId);
+    const brandIds = userBrands.map((ub) => ub.brandId);
 
     const posts = await prismaClient.post.findMany({
       where: {
         brands: {
           some: {
             brandId: {
-              in: brandIds
-            }
-          }
+              in: brandIds,
+            },
+          },
         },
-        status: 'DRAFT'
+        status: "DRAFT",
       },
       include: {
         user: true,
         brands: {
           include: {
-            brand: true
-          }
+            brand: true,
+          },
         },
         wig: {
           include: {
@@ -217,32 +196,36 @@ export async function getCommercialDraftPosts(): Promise<{
             size: true,
             quality: true,
             currency: true,
-          }
+          },
         },
         sharedBy: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     // Convert Decimal to number for serialization
-    const sanitizedPosts = posts.map(post => ({
+    const sanitizedPosts = posts.map((post) => ({
       ...post,
-      wig: post.wig ? {
-        ...post.wig,
-        basePrice: Number(post.wig.basePrice),
-        currency: post.wig.currency ? {
-          ...post.wig.currency,
-          rate: Number(post.wig.currency.rate)
-        } : null
-      } : null
+      wig: post.wig
+        ? {
+            ...post.wig,
+            basePrice: Number(post.wig.basePrice),
+            currency: post.wig.currency
+              ? {
+                  ...post.wig.currency,
+                  rate: Number(post.wig.currency.rate),
+                }
+              : null,
+          }
+        : null,
     }));
 
-    return { success: true, data: sanitizedPosts as PostWithRelations[] };
+    return { success: true, data: sanitizedPosts as unknown as PostWithRelations[] };
   } catch (error) {
-    console.error('Error fetching commercial posts:', error);
-    return { success: false, error: 'Failed to fetch posts' };
+    console.error("Error fetching commercial posts:", error);
+    return { success: false, error: "Failed to fetch posts" };
   }
 }
 
@@ -289,9 +272,9 @@ export async function getInfographePosts(): Promise<{
               select: {
                 id: true,
                 name: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         wig: {
           include: {
@@ -407,7 +390,7 @@ export async function deletePost(postId: string) {
     }
 
     const currentUser = await getAuthenticatedUserFromDb();
-    if (!currentUser) {
+    if (!currentUser || currentUser.role !== UserRole.ADMIN) {
       return { success: false, error: "Unauthorized" };
     }
 
@@ -418,11 +401,6 @@ export async function deletePost(postId: string) {
 
     if (!post) {
       return { success: false, error: "Post not found" };
-    }
-
-    // Allow deletion if user is admin or the original creator
-    if (currentUser.role !== UserRole.ADMIN && post.userId !== currentUser.id) {
-      return { success: false, error: "Not authorized to delete this post" };
     }
 
     await prismaClient.post.delete({
@@ -440,149 +418,63 @@ export async function deletePost(postId: string) {
 export async function updatePost(
   postId: string,
   data: {
-    content?: string;
-    mediaUrls?: string[];
-    scheduledFor?: Date | null;
-    status?: PostStatus;
-    brandIds?: string[];
-    wigData?: {
-      name?: string;
-      description?: string;
-      basePrice?: number;
-      colorId?: string;
-      sizeId?: string;
-      qualityId?: string;
-      currencyId?: string;
-      imageUrls?: string[];
+    content: string;
+    typeId: string;
+    mediaUrls: string[];
+    brandIds: string[];
+    wigData: {
+      name: string;
+      description: string;
+      basePrice: number;
+      colorId: string;
+      sizeId: string;
+      qualityId: string;
+      currencyId: string;
+      imageUrls: string[];
     };
   }
 ) {
   try {
-    const currentUser = await getAuthenticatedUserFromDb();
-    if (!currentUser) {
-      return { success: false, error: "Unauthorized" };
-    }
-
     const post = await prismaClient.post.findUnique({
       where: { id: postId },
-      include: { user: true, wig: true },
+      include: { wig: true }
     });
 
-    if (!post) {
-      return { success: false, error: "Post not found" };
+    if (!post?.wig) {
+      throw new Error('Post or wig not found');
     }
 
-    // Allow updates if user is admin or the original creator
-    if (currentUser.role !== UserRole.ADMIN && post.userId !== currentUser.id) {
-      return { success: false, error: "Not authorized to update this post" };
-    }
-
-    // If content is being updated, make sure it syncs to the wig description
-    if (data.content && data.wigData) {
-      data.wigData.description = data.content;
-    } else if (data.content && post.wig) {
-      // If no wigData provided but content updated, update wig description separately
-      await prismaClient.wig.update({
-        where: { id: post.wig.id },
-        data: {
-          description: data.content,
-        },
-      });
-    }
-
-    // If wigData has description without content update, sync that to post content
-    if (data.wigData?.description && !data.content) {
-      data.content = data.wigData.description;
-    }
-
-    // Update wig if wigData is provided
-    if (data.wigData && post.wig) {
-      const wigUpdateData = {
-        name: data.wigData.name,
-        description: data.wigData.description,
-        basePrice: data.wigData.basePrice,
-        currencyId: data.wigData.currencyId,
-        colorId: data.wigData.colorId,
-        sizeId: data.wigData.sizeId,
-        qualityId: data.wigData.qualityId,
-      };
-
-      // Only include defined fields in the update
-      const cleanedWigData = Object.fromEntries(
-        Object.entries(wigUpdateData).filter(([_, value]) => value !== undefined)
-      );
-
-      await prismaClient.wig.update({
-        where: { id: post.wig.id },
-        data: cleanedWigData,
-      });
-    }
-
-    // If brandIds are provided, update the post-brand relationships
-    if (data.brandIds) {
-      // Delete existing relationships
-      await prismaClient.postBrand.deleteMany({
-        where: { postId }
-      });
-
-      // Create new relationships
-      await prismaClient.postBrand.createMany({
-        data: data.brandIds.map(brandId => ({
-          postId,
-          brandId
-        }))
-      });
-    }
-
-    // Update post
     const updatedPost = await prismaClient.post.update({
       where: { id: postId },
       data: {
         content: data.content,
+        typeId: data.typeId,
         mediaUrls: data.mediaUrls,
-        scheduledFor: data.scheduledFor,
-        status: data.status,
-      },
-      include: {
-        user: true,
         brands: {
-          include: {
-            brand: true,
-          },
-        },
-        wig: {
-          include: {
-            color: true,
-            size: true,
-            quality: true,
-            currency: true,
-          },
-        },
+          deleteMany: {},
+          create: data.brandIds.map(brandId => ({ brandId }))
+        }
       },
     });
 
-    // Serialize Decimal values before returning
-    const serializedPost = {
-      ...updatedPost,
-      wig: updatedPost.wig
-        ? {
-            ...updatedPost.wig,
-            basePrice: Number(updatedPost.wig.basePrice),
-            currency: {
-              ...updatedPost.wig.currency,
-              rate: Number(updatedPost.wig.currency.rate),
-            },
-            quality: updatedPost.wig.quality,
-          }
-        : null,
-    };
+    await prismaClient.wig.update({
+      where: { id: post.wig.id },
+      data: {
+        name: data.wigData.name,
+        description: data.content,
+        basePrice: data.wigData.basePrice,
+        colorId: data.wigData.colorId,
+        sizeId: data.wigData.sizeId,
+        qualityId: data.wigData.qualityId,
+        currencyId: data.wigData.currencyId,
+        imageUrls: data.wigData.imageUrls,
+      }
+    });
 
-    revalidatePath("/dashboard/infographe/home");
-    revalidatePath("/dashboard/commercial/home");
-    return { success: true, data: serializedPost };
+    return { success: true, data: updatedPost };
   } catch (error) {
-    console.error("Failed to update post:", error);
-    return { success: false, error: "Failed to update post" };
+    console.error('Error updating post:', error);
+    return { success: false, error: 'Failed to update post' };
   }
 }
 
@@ -649,5 +541,59 @@ export async function unmarkPostAsShared(postId: string) {
   } catch (error) {
     console.error("Failed to unmark post as shared:", error);
     return { success: false, error: "Failed to unmark post as shared" };
+  }
+}
+
+export async function getPostById(postId: string): Promise<PostWithRelations | null> {
+  try {
+    const post = await prismaClient.post.findUnique({
+      where: { id: postId },
+      include: {
+        user: {
+          select: { name: true }
+        },
+        brands: {
+          include: {
+            brand: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        },
+        wig: {
+          include: {
+            color: true,
+            size: true,
+            quality: true,
+            currency: true
+          }
+        },
+        type: true,
+        sharedBy: true
+      }
+    });
+
+    if (!post) return null;
+
+    const serializedPost = {
+      ...post,
+      brandIds: post.brands.map(b => b.brand.id),
+      isShared: post.sharedBy.length > 0,
+      wig: post.wig ? {
+        ...post.wig,
+        basePrice: Number(post.wig.basePrice),
+        currency: {
+          ...post.wig.currency,
+          rate: Number(post.wig.currency.rate)
+        }
+      } : null
+    };
+
+    return serializedPost as PostWithRelations;
+  } catch (error) {
+    console.error("Error fetching post:", error);
+    return null;
   }
 }

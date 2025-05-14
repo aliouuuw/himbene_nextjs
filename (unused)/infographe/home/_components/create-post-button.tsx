@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { CreatePostDialog } from "../../_components/create-post-dialog";
+import { CreatePostDialog } from "../../../../app/dashboard/admin/posts/_components/create-post-dialog";
 import { Currency } from "@/types";
 import { Brand, WigColor, WigSize, WigQuality } from "@prisma/client";
 

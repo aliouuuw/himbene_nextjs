@@ -581,3 +581,34 @@ export async function deleteWigQuality(id: string) {
     return { success: false, error: "Failed to delete quality" };
   }
 }
+
+// Post Type Actions
+export async function createPostType(name: string) {
+  try {
+    await prismaClient.postType.create({
+      data: { name }
+    });
+    revalidatePath("/dashboard/admin/posttypes");
+    return { success: true };
+  } catch (error) {
+    console.error(error)
+    return { success: false, error: "Failed to create post type" };
+  }
+}
+
+export async function getPostTypes() {
+  return await prismaClient.postType.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+}
+
+export async function deletePostType(id: string) {
+  try {
+    await prismaClient.postType.delete({ where: { id } });
+    revalidatePath("/dashboard/admin/posttypes");
+    return { success: true };
+  } catch (error) {
+    console.error(error)
+    return { success: false, error: "Failed to delete post type" };
+  }
+}

@@ -4,7 +4,6 @@ import { getBrands, getCurrencies, getWigSizes, getWigColors, getWigQualities, g
 import { getInfographePosts } from "@/app/actions/post-actions";
 import { PostWithRelations, Currency } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { InfographePostsList } from "./_components/infographe-posts-list";
 import { CreatePostButton } from "./_components/create-post-button";
 import { Separator } from "@/components/ui/separator";
 import { WigQuality, Brand, UserBrand } from "@prisma/client";
@@ -32,15 +31,6 @@ function PostsTabsContent({ value, posts, currencies, qualities, brands, error, 
 
                     <TabsContent value="grid">
                         <InfographePostsGrid 
-                            posts={posts}
-                            currencies={currencies}
-                            qualities={qualities}
-                            brands={brands}
-                            userBrand={userBrand}
-                        />
-                    </TabsContent>
-                    <TabsContent value="list">
-                        <InfographePostsList 
                             posts={posts}
                             currencies={currencies}
                             qualities={qualities}

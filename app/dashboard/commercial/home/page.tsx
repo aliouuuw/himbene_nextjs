@@ -1,16 +1,13 @@
-/*eslint-disable @typescript-eslint/no-explicit-any*/
-
 import { getCommercialDraftPosts } from "@/app/actions/post-actions";
-import { getCurrencies, getUserBrand } from "@/app/actions/admin-actions";
+import { getCurrencies, getPostTypes, getUserBrand } from "@/app/actions/admin-actions";
 import { PostWithRelations } from "@/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { LayoutGrid, List } from "lucide-react";
-import { CommercialPostsGrid } from "./commercial-posts-grid";
-import { CommercialPostsList } from "./commercial-posts-list";
 import { getAuthenticatedUsersAccount } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { UserBrand } from "@prisma/client";
+import { PostsTabs } from "./posts-tabs";
+
 export default async function CommercialHomePage() {
   const account = await getAuthenticatedUsersAccount();
   const passwordChangeRequired = account?.passwordChangeRequired;
@@ -20,10 +17,11 @@ export default async function CommercialHomePage() {
   if (passwordChangeRequired) {
     return redirect("/change-password");
   }
-  const [postsResult, currencies, userBrand] = await Promise.all([
+  const [postsResult, currencies, userBrand, postTypes] = await Promise.all([
     getCommercialDraftPosts(),
     getCurrencies(),
     getUserBrand(),
+    getPostTypes(),
   ]);
 
   //
@@ -41,12 +39,12 @@ export default async function CommercialHomePage() {
         } : null,
         brandIds: post.brands?.map(b => b.brand.name) || [],
         brands: post.brands as unknown as { brand: { id: string; name: string } }[],
-        sharedBy: (post as any).sharedBy || [],
-        isShared: (post as any).sharedBy?.some((share: any) => share.userId === account?.id) || false
+        sharedBy: (post as PostWithRelations).sharedBy || [],
+        isShared: Array.isArray((post as PostWithRelations).sharedBy)
+          ? (post as PostWithRelations).sharedBy.some((share: { userId: string }) => share.userId === account?.id)
+          : false
     })) || [])
     : [];
-
-  //console.log(posts);
 
   // Filter posts based on shared status
   const unsharedPosts = posts?.filter((post) => post.sharedBy.length === 0) || [];
@@ -55,7 +53,7 @@ export default async function CommercialHomePage() {
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Galerie de posts</h1>
         <p className="text-muted-foreground text-sm pt-3">
           Gérer vos posts, partager ou publier
         </p>
@@ -82,63 +80,21 @@ export default async function CommercialHomePage() {
           </div>
 
           <TabsContent value="to-share">
-            <Tabs defaultValue="grid">
-              <div className="flex justify-end mb-4">
-                <TabsList>
-                  <TabsTrigger value="grid">
-                    <LayoutGrid className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="list">
-                    <List className="h-4 w-4" />
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="grid">
-                <CommercialPostsGrid
-                  posts={unsharedPosts}
-                  currencies={currencies}
-                  userBrand={userBrand as UserBrand}
-                />
-              </TabsContent>
-              <TabsContent value="list">
-                <CommercialPostsList
-                  posts={unsharedPosts}
-                  currencies={currencies}
-                  userBrand={userBrand as UserBrand}
-                />
-              </TabsContent>
-            </Tabs>
+            <PostsTabs
+              posts={unsharedPosts}
+              currencies={currencies}
+              userBrand={userBrand as UserBrand}
+              postTypes={postTypes}
+            />
           </TabsContent>
 
           <TabsContent value="shared">
-            <Tabs defaultValue="grid">
-              <div className="flex justify-end mb-4">
-                <TabsList>
-                  <TabsTrigger value="grid">
-                    <LayoutGrid className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="list">
-                    <List className="h-4 w-4" />
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="grid">
-                <CommercialPostsGrid
-                  posts={sharedPosts}
-                  currencies={currencies}
-                  userBrand={userBrand as UserBrand}
-                />
-              </TabsContent>
-              <TabsContent value="list">
-                <CommercialPostsList
-                  posts={sharedPosts}
-                  currencies={currencies}
-                  userBrand={userBrand as UserBrand}
-                />
-              </TabsContent>
-            </Tabs>
+            <PostsTabs
+              posts={sharedPosts}
+              currencies={currencies}
+              userBrand={userBrand as UserBrand}
+              postTypes={postTypes}
+            />
           </TabsContent>
         </Tabs>
       </div>

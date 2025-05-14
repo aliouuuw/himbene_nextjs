@@ -3,6 +3,10 @@ export type PostWithRelations = {
   content: string;
   status: string;
   mediaUrls: string[];
+  typeId: string;
+  type: {
+    name: string;
+  };
   createdAt: Date;
   updatedAt: Date;
   userId: string;
@@ -28,9 +32,11 @@ export type PostWithRelations = {
       rate: number;
     };
     color: {
+      id: string;
       name: string;
     };
     size: {
+      id: string;
       name: string;
     };
     quality: {

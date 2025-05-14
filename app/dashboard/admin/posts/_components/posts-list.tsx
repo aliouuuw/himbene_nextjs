@@ -5,8 +5,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { deletePost } from "@/app/actions/post-actions";
 import { toast } from "sonner";
-import { EditPostDialog } from "./edit-post-dialog";
-import { PostDetailsDialog } from "./post-details-dialog";
+import { PostDetailsDialog } from "../../../../../components/post-details-dialog";
 import {
   Table,
   TableBody,
@@ -40,7 +39,7 @@ interface Props {
   userBrand: UserBrand;
 }
 
-export function InfographePostsList({ posts, currencies, qualities, brands, userBrand }: Props) {
+export function PostsList({ posts, currencies, userBrand }: Props) {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(null);
 
   const handleDelete = async (postId: string) => {
@@ -110,7 +109,6 @@ export function InfographePostsList({ posts, currencies, qualities, brands, user
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                    <EditPostDialog post={post} currencies={currencies} qualities={qualities} brands={brands} />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="sm">Supprimer</Button>
@@ -149,6 +147,7 @@ export function InfographePostsList({ posts, currencies, qualities, brands, user
           showShareButtons={false}
           onOpenChange={(open: boolean) => !open && setSelectedPost(null)}
           userBrand={userBrand as UserBrand}
+          isAdmin={true}
         />
       )}
     </>

@@ -23,8 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { PostDetailsDialog } from "./post-details-dialog";
-import { EditPostDialog } from "./edit-post-dialog";
+import { PostDetailsDialog } from "../../../../components/post-details-dialog";
 
 interface Props {
   posts: PostWithRelations[];
@@ -34,7 +33,7 @@ interface Props {
   userBrand: UserBrand;
 }
 
-export function InfographePostsGrid({ posts, currencies, qualities, brands, userBrand }: Props) {
+export function InfographePostsGrid({ posts, currencies, userBrand }: Props) {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(null);
   const [imageIndices, setImageIndices] = useState<Record<string, number>>(() => {
     // Initialize indices for all posts
@@ -172,7 +171,6 @@ export function InfographePostsGrid({ posts, currencies, qualities, brands, user
                 Créé le {format(new Date(post.createdAt), 'Pp', { locale: fr })}
               </span>
               <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                <EditPostDialog post={post} currencies={currencies} qualities={qualities} brands={brands} />
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="sm" className="p-0 h-8 w-8 text-destructive">

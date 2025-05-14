@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PostWithRelations, Currency } from "@/types";
-import { PostDetailsDialog } from "@/app/dashboard/infographe/home/_components/post-details-dialog";
+import { PostDetailsDialog } from "@/components/post-details-dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Eye, Share, ChevronLeft, ChevronRight } from "lucide-react";
 import { markPostAsShared, unmarkPostAsShared } from "@/app/actions/post-actions";

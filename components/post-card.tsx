@@ -26,14 +26,15 @@ import {
   ThreadsIcon,
 } from "react-share";
 import { Button } from "./ui/button";
-import { usePathname } from "next/navigation";
 import { fr } from "date-fns/locale";
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
 import { useState } from "react";
 import { UserBrand } from "@prisma/client";
-import { Expand } from "lucide-react";
-import { FullScreenMediaViewer } from './full-screen-media-viewer';
-
+import { Expand, Pencil, Trash } from "lucide-react";
+import { FullScreenMediaViewer } from "./full-screen-media-viewer";
+import Link from "next/link";
+import { deletePost } from "@/app/actions/post-actions";
+import { toast } from "sonner";
 interface PostCardProps {
   post: PostWithRelations;
   currencies?: Currency[];
@@ -43,7 +44,7 @@ interface PostCardProps {
   onEdit?: (post: PostWithRelations) => void;
   onDelete?: (postId: string) => void;
   userBrand: UserBrand;
-  isInfographic?: boolean;
+  isAdmin?: boolean;
 }
 
 export function PostCard({
@@ -55,10 +56,12 @@ export function PostCard({
   onEdit,
   onDelete,
   userBrand,
-  isInfographic = false,
+  isAdmin = false,
 }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [fullScreenMediaIndex, setFullScreenMediaIndex] = useState<number | null>(null);
+  const [fullScreenMediaIndex, setFullScreenMediaIndex] = useState<
+    number | null
+  >(null);
 
   const formatCurrency = (
     amount: number,
@@ -70,14 +73,19 @@ export function PostCard({
 
   const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/posts/${post.id}` || "";
 
-  const pathname = usePathname();
-  const isDashboardOrCommercial = pathname.includes("/dashboard/admin") || pathname.includes("/dashboard/commercial");
-  //console.log(post);
-
   const getAssociatedUserBrand = (post: PostWithRelations) => {
-    if (!userBrand?.brandId) return 'No associated brand';
-    const brand = post.brands?.find(b => b.brand.id === userBrand.brandId);
-    return brand?.brand.name || 'No associated brand';
+    if (!userBrand?.brandId) return "No associated brand";
+    const brand = post.brands?.find((b) => b.brand.id === userBrand.brandId);
+    return brand?.brand.name || "No associated brand";
+  };
+
+  const handleDelete = async () => {
+    const result = await deletePost(post.id);
+    if (result.success) {
+      toast.success("Post deleted successfully");
+    } else {
+      toast.error("Failed to delete post");
+    }
   };
 
   return (
@@ -90,10 +98,20 @@ export function PostCard({
                 {post.wig?.name}
               </CardTitle>
             </div>
-            {isDashboardOrCommercial && (
-              <Badge variant="outline" className="text-xs">
-                {post.status}
-              </Badge>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/dashboard/admin/posts/${post.id}/edit`}>
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Modifier
+                  </Link>
+                </Button>
+
+                <Button variant="destructive" size="sm" onClick={handleDelete}>
+                  <Trash className="h-4 w-4 mr-1" />
+                  Supprimer
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -113,7 +131,9 @@ export function PostCard({
                     >
                       <Image
                         src={url}
-                        alt={`${post.wig?.name || "Product"} image ${index + 1}`}
+                        alt={`${post.wig?.name || "Product"} image ${
+                          index + 1
+                        }`}
                         fill
                         sizes="100%"
                         className="object-cover transition-transform group-hover:scale-105"
@@ -130,110 +150,169 @@ export function PostCard({
           {/* Wig Details */}
           {post.wig && (
             <div className="space-y-4">
-              <div className="flex items-start justify-between pb-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2 flex-1">
+                    {/* Post Type & Brand Section */}
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      {post.type?.name && (
+                        <Badge variant="secondary" className="text-xs">
+                          {post.type.name}
+                        </Badge>
+                      )}
                       {post.brands && post.brands.length > 0 && (
                         <>
-                          {!isInfographic && (
-                            <Badge variant="secondary" className="text-xs">
+                          {!isAdmin ? (
+                            <Badge variant="outline" className="text-xs">
                               {getAssociatedUserBrand(post)}
                             </Badge>
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {post.brands.map((brand) => (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs"
+                                  key={brand.brand.id}
+                                >
+                                  {brand.brand.name}
+                                </Badge>
+                              ))}
+                            </div>
                           )}
-                          {isInfographic && post.brands.map((brand) => (
-                            <Badge variant="secondary" className="text-xs" key={brand.brand.id}>
-                              {brand.brand.name}
-                            </Badge>
-                          ))}                 
                         </>
                       )}
-                      <Badge variant="secondary" className="text-xs">
-                        {post.wig.size?.name}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {post.wig.color?.name}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {post.wig.quality?.name}
-                      </Badge>
                     </div>
-                  {post.wig.description && (
-                    <div className="space-y-2">
-                      <p className={`text-sm text-muted-foreground italic pt-4 ${!isExpanded && 'line-clamp-2'}`}>
-                        {post.wig.description}
-                      </p>
-                      {post.wig.description.length > 100 && (
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto text-xs"
-                          onClick={() => setIsExpanded(!isExpanded)}
-                        >
-                          {isExpanded ? 'Voir moins' : 'Voir plus'}
-                        </Button>
+
+                    {/* Specifications Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {post.wig.size?.name && (
+                        <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-md">
+                          <span className="text-xs text-muted-foreground">
+                            Taille:
+                          </span>
+                          <span className="text-xs font-medium">
+                            {post.wig.size.name}
+                          </span>
+                        </div>
+                      )}
+                      {post.wig.color?.name && (
+                        <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-md">
+                          <span className="text-xs text-muted-foreground">
+                            Couleur:
+                          </span>
+                          <span className="text-xs font-medium">
+                            {post.wig.color.name}
+                          </span>
+                        </div>
+                      )}
+                      {post.wig.quality?.name && (
+                        <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-md">
+                          <span className="text-xs text-muted-foreground">
+                            Qualité:
+                          </span>
+                          <span className="text-xs font-medium">
+                            {post.wig.quality.name}
+                          </span>
+                        </div>
                       )}
                     </div>
-                  )}
+                  </div>
+                  <p className="text-xs text-muted-foreground whitespace-nowrap ml-4">
+                    {format(new Date(post.createdAt), "d MMMM yyyy", {
+                      locale: fr,
+                    })}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {format(new Date(post.createdAt), "d MMMM yyyy", { locale: fr })}
-                </p>
+
+                {/* Description with smooth transition */}
+                {post.wig.description && (
+                  <div className="space-y-2">
+                    <div
+                      className={`relative ${
+                        !isExpanded && "max-h-[48px] overflow-hidden"
+                      }`}
+                    >
+                      <p className="text-sm text-muted-foreground italic">
+                        {post.wig.description}
+                      </p>
+                      {!isExpanded && post.wig.description.length > 100 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent" />
+                      )}
+                    </div>
+                    {post.wig.description.length > 100 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-auto py-1 px-2"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                      >
+                        {isExpanded ? "Voir moins ↑" : "Voir plus ↓"}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Pricing */}
-              <div className="bg-muted/50 p-3 rounded-md">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Prix local</span>
-                  <span className="text-lg font-semibold flex items-center gap-2">
-                    {post.wig.currency?.id && (
-                      <Image 
-                        src={getCurrencyFlag(post.wig.currency.id as CurrencyCode)} 
-                        alt={post.wig.currency.id}
-                        width={20}
-                        height={15}
-                        className="rounded-sm"
-                      />
-                    )}
-                    {formatCurrency(Number(post.wig.basePrice), {
-                      symbol: post.wig.currency?.symbol,
-                      rate: Number(post.wig.currency?.rate),
-                    })}
-                  </span>
-                </div>
-
-                {variant === "default" && currencies.length > 0 && (
-                  <div className="text-sm space-y-2 pt-2 border-t">
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Disponible dans d&apos;autres devises:
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {currencies
-                        .filter((curr) => curr.id !== post.wig?.currencyId)
-                        .map((currency) => (
-                          <div
-                            key={currency.id}
-                            className="flex items-center justify-between bg-background/50 p-2 rounded"
-                          >
-                            <span className="text-muted-foreground flex items-center gap-2">
-                              <Image 
-                                src={getCurrencyFlag(currency.id as CurrencyCode)} 
-                                alt={currency.id}
-                                width={20}
-                                height={15}
-                                className="rounded-sm"
-                              />
-                              {currency.name}
-                            </span>
-                            <span className="font-medium">
-                              {formatCurrency(Number(post.wig?.basePrice || 0), {
-                                symbol: currency.symbol,
-                                rate: Number(currency.rate),
-                              })}
-                            </span>
-                          </div>
-                        ))}
+              <div className="bg-muted/50 p-4 rounded-md">
+                <h4 className="text-sm font-medium mb-3">Prix disponibles</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Local Price - Always First */}
+                  <div className="flex items-center justify-between p-3 rounded-md">
+                    <div className="flex items-center gap-2">
+                      {post.wig.currency?.id && (
+                        <Image
+                          src={getCurrencyFlag(
+                            post.wig.currency.id as CurrencyCode
+                          )}
+                          alt={post.wig.currency.id}
+                          width={24}
+                          height={18}
+                          className="rounded-sm"
+                        />
+                      )}
+                      {/* <span className="text-sm text-muted-foreground">
+                        {getCurrencyName(post.wig.currency.id as CurrencyCode)}
+                      </span> */}
                     </div>
+                    <span className="text-base font-semibold">
+                      {formatCurrency(Number(post.wig.basePrice), {
+                        symbol: post.wig.currency?.symbol,
+                        rate: Number(post.wig.currency?.rate),
+                      })}
+                    </span>
                   </div>
-                )}
+
+                  {/* Other Currencies */}
+                  {variant === "default" &&
+                    currencies
+                      .filter((curr) => curr.id !== post.wig?.currencyId)
+                      .map((currency) => (
+                        <div
+                          key={currency.id}
+                          className="flex items-center justify-between bg-muted/30 p-3 rounded-md hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Image
+                              src={getCurrencyFlag(currency.id as CurrencyCode)}
+                              alt={currency.id}
+                              width={24}
+                              height={18}
+                              className="rounded-sm"
+                            />
+                            {/* <span className="text-sm text-muted-foreground">
+                            {currency.name}
+                          </span> */}
+                          </div>
+                          <span className="text-base font-medium">
+                            {formatCurrency(Number(post.wig?.basePrice || 0), {
+                              symbol: currency.symbol,
+                              rate: Number(currency.rate),
+                            })}
+                          </span>
+                        </div>
+                      ))}
+                </div>
               </div>
             </div>
           )}

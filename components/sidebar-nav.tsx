@@ -16,7 +16,8 @@ import {
   Ruler,
   Building2,
   Currency,
-  Award
+  Award,
+  Tag,
 } from "lucide-react";
 import { useState } from "react";
 import { UserRole } from "@prisma/client";
@@ -53,6 +54,11 @@ export const navItems: NavItem[] = [
         icon: PenTool,
       },
       {
+        href: "/dashboard/admin/posttypes",
+        label: "Tags",
+        icon: Tag,
+      },
+      {
         href: "/dashboard/admin/brands",
         label: "Marques",
         icon: Building2,
@@ -87,32 +93,13 @@ export const navItems: NavItem[] = [
   },
   {
     href: "#",
-    label: "Infographe",
-    icon: PenTool,
-    children: [
-      {
-        href: "/dashboard/infographe/home",
-        label: "Tableau de bord",
-        icon: LayoutDashboard,
-      },
-    ],
-    roles: ["ADMIN", "INFOGRAPHE"],
-  },
-  {
-    href: "#",
     label: "Commercial",
     icon: Share2,
     children: [
       {
         href: "/dashboard/commercial/home",
-        label: "Tableau de bord",
+        label: "Galerie de posts",
         icon: LayoutDashboard,
-      },
-      {
-        href: "/dashboard/commercial/platforms",
-        label: "Plateformes",
-        icon: Globe,
-        isDisabled: true,
       },
     ],
     roles: ["ADMIN", "COMMERCIAL"],
@@ -178,7 +165,7 @@ export function SidebarNav({ userRole }: { userRole: UserRole | null }) {
                   disabled={cannotAccess(userRole, item.roles ?? []) || child.isDisabled}
                 >
                   <Link href={child.href} className={child.isDisabled ? "pointer-events-none" : ""}>
-                    <child.icon className={`mr-2 h-4 w-4 ${child.isDisabled ? "opacity-50" : ""}`} />
+                    <child.icon className={`mr-2 h-4 w-4 ${child.isDisabled ? "opacity-50" : ""} ${child.icon === Tag ? "rotate-45" : ""}`} />
                     <p className={child.isDisabled ? "opacity-50" : ""}>{child.label}</p>
                   </Link>
                 </Button>

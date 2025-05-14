@@ -119,6 +119,14 @@ model UserBrand {
   @@id([userId, brandId])
 }
 
+model PostType {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+}
+
 model Post {
   id           String   @id @default(cuid())
   userId       String
@@ -126,6 +134,8 @@ model Post {
   brands       PostBrand[]  // Changed from single brand to many-to-many relationship
   content      String
   mediaUrls    Json?
+  typeId       String?
+  type         PostType? @relation(fields: [typeId], references: [id])
   status       PostStatus
   scheduledFor DateTime?
   wigId        String?

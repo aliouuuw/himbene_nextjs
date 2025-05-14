@@ -10,26 +10,17 @@ import { format } from 'date-fns';
 import { CalendarIcon, X } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import Image from 'next/image';
-import { createDraftPost } from '@/app/actions/post-actions';
+import { createDraftPost, CreatePostInput } from '@/app/actions/post-actions';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brand, WigColor, WigQuality, WigSize } from '@prisma/client';
+import { Brand, PostType, WigColor, WigQuality, WigSize } from '@prisma/client';
 import { useUploadThing } from '@/lib/uploadthing';
 import { Currency } from "@/types";
 import { fr } from 'date-fns/locale';
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
 import { MultiSelect } from "@/components/ui/multi-select";
-
-type WigFormData = {
-  name: string;
-  description: string;
-  basePrice: number;
-  colorId: string;
-  sizeId: string;
-  currencyId: string;
-  qualityId: string;
-  brandIds: string[];
-};
+import { useRouter } from "next/navigation";
+import { Input } from '@/components/ui/input';
 
 interface CreatePostFormProps {
   brands: Brand[];
@@ -37,7 +28,26 @@ interface CreatePostFormProps {
   sizes: WigSize[];
   currencies: Currency[];
   qualities: WigQuality[];
+  types: PostType[];
 }
+
+// Define an initial state structure based on CreatePostInput
+const initialFormData: Omit<CreatePostInput, 'mediaUrls'> & { mediaUrlsString: string } = {
+  content: "",
+  typeId: "",
+  brandIds: [],
+  wigData: {
+    name: "",
+    description: "",
+    basePrice: 0,
+    colorId: "",
+    sizeId: "",
+    qualityId: "",
+    currencyId: "",
+    imageUrls: [], // This will be handled by mediaUrlsString for simplicity in form
+  },
+  mediaUrlsString: "", // For comma-separated media URLs
+};
 
 export function CreatePostForm({ 
   brands,
@@ -45,21 +55,22 @@ export function CreatePostForm({
   sizes,
   currencies,
   qualities,
+  types,
 }: CreatePostFormProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [wigData, setWigData] = useState<WigFormData>({
-    name: '',
-    description: '',
-    basePrice: 0,
-    colorId: '',
-    sizeId: '',
-    currencyId: currencies.find(c => c.isBase)?.id || currencies[0]?.id || '',
-    qualityId: qualities[0]?.id || '',
-    brandIds: [],
+  const [formData, setFormData] = useState({
+    ...initialFormData,
+    typeId: types[0]?.id || '',
+    wigData: {
+      ...initialFormData.wigData,
+      currencyId: currencies.find(c => c.isBase)?.id || currencies[0]?.id || '',
+      qualityId: qualities[0]?.id || '',
+    }
   });
   const { startUpload } = useUploadThing("postMedia");
+  const router = useRouter();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(prev => [...prev, ...acceptedFiles]);
@@ -78,31 +89,45 @@ export function CreatePostForm({
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleWigDataChange = (field: keyof WigFormData, value: string | number) => {
-    if (field === 'basePrice') {
-      // Handle empty string or invalid number
-      const numValue = value === '' ? 0 : parseFloat(value.toString());
-      setWigData(prev => ({
-        ...prev,
-        [field]: isNaN(numValue) ? 0 : numValue
-      }));
-    } else {
-      setWigData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleWigDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      wigData: {
+        ...prev.wigData,
+        [name]: name === 'basePrice' ? Number(value) : value,
+      }
+    }));
+  };
+
+  const handleSelectChange = (name: keyof Omit<CreatePostInput, 'mediaUrls' | 'wigData' | 'brandIds'>, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleWigSelectChange = (name: keyof CreatePostInput['wigData'], value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      wigData: {
+        ...prev.wigData,
+        [name]: value,
+      }
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (wigData.brandIds.length === 0) {
+    if (formData.brandIds.length === 0) {
       toast.error('Veuillez sélectionner au moins une marque');
       return;
     }
 
     // Validate wig data
-    if (!wigData.name || !wigData.colorId || !wigData.sizeId || wigData.basePrice <= 0) {
+    if (!formData.wigData.name || !formData.wigData.colorId || !formData.wigData.sizeId || formData.wigData.basePrice <= 0) {
       toast.error('Veuillez remplir toutes les informations de la perruque');
       return;
     }
@@ -119,31 +144,33 @@ export function CreatePostForm({
         mediaUrls = uploadResponse.map(file => file.url);
       }
 
-      const result = await createDraftPost({
-        content: wigData.description,
-        mediaUrls,
-        scheduledFor: date,
-        brandIds: wigData.brandIds,
+      const postDataToSubmit: CreatePostInput = {
+        ...formData,
+        mediaUrls: mediaUrls,
         wigData: {
-          ...wigData,
+          ...formData.wigData,
           imageUrls: mediaUrls,
+          description: formData.content,
         },
-      });
+      };
+      
+      const result = await createDraftPost(postDataToSubmit);
       
       if (result.success) {
         toast.success('Post créé avec succès');
         setFiles([]);
         setDate(new Date());
-        setWigData({
-          name: '',
-          description: '',
-          basePrice: 0,
-          colorId: '',
-          sizeId: '',
-          currencyId: currencies.find(c => c.isBase)?.id || currencies[0]?.id || '',  
-          qualityId: qualities[0]?.id || '',
-          brandIds: [],
+        setFormData({
+          ...initialFormData,
+          typeId: types[0]?.id || '',
+          wigData: {
+            ...initialFormData.wigData,
+            currencyId: currencies.find(c => c.isBase)?.id || currencies[0]?.id || '',
+            qualityId: qualities[0]?.id || '',
+          },
         });
+        router.push("/dashboard/admin/posts");
+        router.refresh();
       } else {
         toast.error(result.error);
       }
@@ -163,22 +190,24 @@ export function CreatePostForm({
         
         <div className="space-y-2">
             <Label htmlFor="wigName">Nom de la perruque</Label>
-          <input
-            type="text"
-            id="wigName"
-            value={wigData.name}
-            onChange={(e) => handleWigDataChange('name', e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
-            required
-          />
+            <Input
+              type="text"
+              id="wigName"
+              name="name"
+              value={formData.wigData.name}
+              onChange={handleWigDataChange}
+              className="w-full px-3 py-2 border rounded-md"
+              required
+            />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="wigDescription">Description / Contenu du post</Label>
           <Textarea
             id="wigDescription"
-            value={wigData.description}
-            onChange={(e) => handleWigDataChange('description', e.target.value)}
+            name="content"
+            value={formData.content}
+            onChange={handleInputChange}
             className="min-h-[100px]"
             required
           />
@@ -190,14 +219,14 @@ export function CreatePostForm({
             label: brand.name,
             value: brand.id
           }))}
-          selected={wigData.brandIds}
-          onChange={(selected) => setWigData(prev => ({ ...prev, brandIds: selected }))}
+          selected={formData.brandIds}
+          onChange={(selected) => setFormData(prev => ({ ...prev, brandIds: selected }))}
           placeholder="Sélectionner des marques"
         />
         <Label htmlFor="wigQuality">Qualité</Label>
         <Select
-          value={wigData.qualityId}
-          onValueChange={(value) => handleWigDataChange('qualityId', value)}
+          value={formData.wigData.qualityId}
+          onValueChange={(value) => handleWigSelectChange('qualityId', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Choisir une qualité" />
@@ -222,16 +251,17 @@ export function CreatePostForm({
               <input
                 type="number"
                 id="wigPrice"
-                value={wigData.basePrice || ''}
-                onChange={(e) => handleWigDataChange('basePrice', e.target.value)}
+                name="basePrice"
+                value={formData.wigData.basePrice || ''}
+                onChange={handleWigDataChange}
                 className="w-full px-3 py-2 border rounded-md"
                 min="0"
                 step="0.01"
                 required
               />
               <Select
-                value={wigData.currencyId}
-                onValueChange={(value) => handleWigDataChange('currencyId', value)}
+                value={formData.wigData.currencyId}
+                onValueChange={(value) => handleWigSelectChange('currencyId', value)}
               >
                 <SelectTrigger className="w-24">
                   <SelectValue />
@@ -259,8 +289,8 @@ export function CreatePostForm({
           <div className="space-y-2">
             <Label htmlFor="wigColor">Couleur</Label>
             <Select
-              value={wigData.colorId}
-              onValueChange={(value) => handleWigDataChange('colorId', value)}
+              value={formData.wigData.colorId}
+              onValueChange={(value) => handleWigSelectChange('colorId', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Choisir une couleur" />
@@ -278,8 +308,8 @@ export function CreatePostForm({
           <div className="space-y-2">
             <Label htmlFor="wigSize">Taille</Label>
             <Select
-              value={wigData.sizeId}
-              onValueChange={(value) => handleWigDataChange('sizeId', value)}
+              value={formData.wigData.sizeId}
+              onValueChange={(value) => handleWigSelectChange('sizeId', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Choisir une taille" />
@@ -366,13 +396,37 @@ export function CreatePostForm({
         </Popover>
       </div>
 
-      <Button 
-        type="submit" 
-        disabled={isSubmitting} 
-        className="w-full"
-      >
-        {isSubmitting ? 'Création du post...' : 'Créer le post'}
-      </Button>
+      <div className="space-y-2">
+        <Label htmlFor="postType">Type de post</Label>
+        <Select
+          value={formData.typeId}
+          onValueChange={(value) => handleSelectChange('typeId', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Choisir un type de post" />
+          </SelectTrigger>
+          <SelectContent>
+            {types.map((type) => (
+              <SelectItem key={type.id} value={type.id}>
+                {type.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          Annuler
+        </Button>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting} 
+          className="w-full"
+        >
+          {isSubmitting ? 'Création du post...' : 'Créer le post'}
+        </Button>
+      </div>
     </form>
   );
 }

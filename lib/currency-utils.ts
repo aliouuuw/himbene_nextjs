@@ -16,17 +16,9 @@ export const VALID_CURRENCIES = {
     name: "British Pound",
     flag: "/flags/gbp.png"
   },
-  JPY: {
-    name: "Japanese Yen",
-    flag: "/flags/jpy.png"
-  },
   MAD: {
     name: "Moroccan Dirham",
     flag: "/flags/mad.png"
-  },
-  CNY: {
-    name: "Chinese Yuan",
-    flag: "/flags/cny.png"
   },
   NGN: {
     name: "Nigerian Naira",
@@ -73,5 +65,8 @@ export function getCurrencyName(code: CurrencyCode): string {
 }
 
 export function getCurrencyFlag(code: CurrencyCode): string {
+  if (!isValidCurrencyCode(code)) {
+    throw new Error(`Invalid currency code: ${code}`);
+  }
   return VALID_CURRENCIES[code].flag;
-} 
+}

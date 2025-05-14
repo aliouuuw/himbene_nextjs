@@ -75,20 +75,11 @@ export async function middleware(request: NextRequest) {
 			const cookieStore = await cookies();
 			if (userRole === "ADMIN") {
 				return NextResponse.redirect(new URL("/dashboard/admin", request.url));
-			} else if (userRole === "INFOGRAPHE") {
-				return NextResponse.redirect(new URL("/dashboard/infographe/home", request.url));
 			} else if (userRole === "COMMERCIAL") {
 				return NextResponse.redirect(new URL("/dashboard/commercial/home", request.url));
 			}
 			cookieStore.delete("auth_token");
 			return NextResponse.redirect(new URL("/sign-in", request.url));
-		}
-
-		// Check infographe routes access
-		if (pathname.startsWith("/dashboard/infographe")) {
-			if (userRole !== "INFOGRAPHE" && userRole !== "ADMIN") {
-				return NextResponse.redirect(new URL("/unauthorized", request.url));
-			}
 		}
 
 		// Check commercial routes access
