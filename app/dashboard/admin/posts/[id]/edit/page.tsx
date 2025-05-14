@@ -9,16 +9,17 @@ import { PostWithRelations } from "@/types";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-interface PageProps {
-  params: {
+interface EditPostPageProps {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EditPostPage({
   params,
-}: PageProps) {
-  const post = await getPostById(params.id);
+}: EditPostPageProps) {
+  const { id } = await params;
+  const post = await getPostById(id);
   
   if (!post) {
     notFound();

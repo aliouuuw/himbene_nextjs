@@ -93,6 +93,7 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
             quality: true,
           },
         },
+        type: true,
       },
     }),
     getCurrencies()
@@ -106,6 +107,7 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
     user: post.user || { name: null },
     brandIds: [],
     brands: [],
+    type: post.type,
     wig: post.wig ? { 
       ...post.wig,
       id: post.wig.id,
