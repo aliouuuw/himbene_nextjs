@@ -32,7 +32,7 @@ interface CreatePostFormProps {
 }
 
 // Define an initial state structure based on CreatePostInput
-const initialFormData: Omit<CreatePostInput, 'mediaUrls'> & { mediaUrlsString: string } = {
+const initialFormData: Omit<CreatePostInput, 'mediaUrls' | 'mediaNames'> & { mediaUrlsString: string; mediaNamesString: string } = {
   content: "",
   typeId: "",
   brandIds: [],
@@ -47,7 +47,12 @@ const initialFormData: Omit<CreatePostInput, 'mediaUrls'> & { mediaUrlsString: s
     imageUrls: [], // This will be handled by mediaUrlsString for simplicity in form
   },
   mediaUrlsString: "", // For comma-separated media URLs
+  mediaNamesString: "", // For comma-separated media names
 };
+
+// Add these constants at the top of the file
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB in bytes
+const MAX_VIDEO_SIZE = 8 * 1024 * 1024; // 8MB in bytes
 
 export function CreatePostForm({ 
   brands,
@@ -73,7 +78,32 @@ export function CreatePostForm({
   const router = useRouter();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles(prev => [...prev, ...acceptedFiles]);
+    const invalidFiles = acceptedFiles.filter(file => {
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+      return file.size > maxSize;
+    });
+
+    if (invalidFiles.length > 0) {
+      invalidFiles.forEach(file => {
+        const isVideo = file.type.startsWith('video/');
+        const maxSizeMB = isVideo ? '8MB' : '4MB';
+        toast.error(
+          `Le fichier "${file.name}" est trop volumineux. La taille maximum est de ${maxSizeMB}`
+        );
+      });
+
+      // Only add valid files
+      const validFiles = acceptedFiles.filter(file => {
+        const isVideo = file.type.startsWith('video/');
+        const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+        return file.size <= maxSize;
+      });
+      
+      setFiles(prev => [...prev, ...validFiles]);
+    } else {
+      setFiles(prev => [...prev, ...acceptedFiles]);
+    }
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -135,21 +165,25 @@ export function CreatePostForm({
     setIsSubmitting(true);
 
     try {
-      let mediaUrls: string[] = [];
+      let mediaUrlsToStore: string[] = [];
+      let mediaNamesToStore: string[] = [];
+
       if (files.length > 0) {
         const uploadResponse = await startUpload(files);
         if (!uploadResponse) {
           throw new Error('Erreur lors de la téléchargement des fichiers');
         }
-        mediaUrls = uploadResponse.map(file => file.url);
+        mediaUrlsToStore = uploadResponse.map(fileRes => fileRes.url);
+        mediaNamesToStore = uploadResponse.map(fileRes => fileRes.name);
       }
 
       const postDataToSubmit: CreatePostInput = {
         ...formData,
-        mediaUrls: mediaUrls,
+        mediaUrls: mediaUrlsToStore,
+        mediaNames: mediaNamesToStore,
         wigData: {
           ...formData.wigData,
-          imageUrls: mediaUrls,
+          imageUrls: mediaUrlsToStore,
           description: formData.content,
         },
       };
@@ -337,6 +371,9 @@ export function CreatePostForm({
           <input {...getInputProps()} />
           <p className="text-center text-sm text-gray-600">
             Glissez-déposez des fichiers ici, ou cliquez pour sélectionner des fichiers
+          </p>
+          <p className="text-center text-xs text-gray-500 mt-2">
+            Taille maximum: Images - 4MB, Vidéos - 8MB
           </p>
         </div>
 

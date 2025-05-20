@@ -10,9 +10,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { UserBrand, Brand, WigQuality } from "@prisma/client";
 import { PostDetailsDialog } from "@/components/post-details-dialog";
 import { useState } from "react";
+import { isVideoFile } from "@/lib/media-utils";
 
 interface PostItemProps {
-  post: PostWithRelations;
+  post: PostWithRelations & { mediaNames?: string[] };
   currencies: Currency[];
   userBrand?: UserBrand;
   qualities: WigQuality[];
@@ -20,7 +21,7 @@ interface PostItemProps {
 }
 
 const PostItem = ({ post, currencies, userBrand }: PostItemProps) => {
-  const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(
+  const [selectedPost, setSelectedPost] = useState<PostWithRelations & { mediaNames?: string[] } | null>(
     null
   );
   const [imageIndices, setImageIndices] = useState<Record<string, number>>(
@@ -29,82 +30,130 @@ const PostItem = ({ post, currencies, userBrand }: PostItemProps) => {
     })
   );
 
+  const handleMediaClick = () => {
+    const currentPostWithPotentialMediaNames = {
+      ...post,
+      mediaNames: post.mediaNames || post.mediaUrls?.map(() => '') || [] 
+    };
+    setImageIndices((prev) => ({ ...prev, [post.id]: 0 }));
+    setSelectedPost(currentPostWithPotentialMediaNames);
+  };
+
   return (
     <>
       <div
         className="relative aspect-square cursor-pointer group"
-        onClick={() => {
-          setImageIndices((prev) => ({ ...prev, [post.id]: 0 }));
-          setSelectedPost(post);
-        }}
+        onClick={handleMediaClick}
       >
-        {post.mediaUrls?.[0] ? (
-          <>
-            <Image
-              src={
-                post.mediaUrls[imageIndices[post.id] || 0] || post.mediaUrls[0]
-              }
-              alt={post.wig?.name || "Post image"}
-              fill
-              className="object-contain transition-transform group-hover:scale-105 rounded-md"
-            />
-            {post.mediaUrls.length > 1 && (
+        {post.mediaUrls && post.mediaUrls.length > 0 ? (
+          (() => {
+            const currentIndex = imageIndices[post.id] || 0;
+            const currentUrl = post.mediaUrls[currentIndex];
+            const currentName = post.mediaNames?.[currentIndex]; 
+
+            if (!currentUrl) {
+              return (
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  Média non disponible
+                </div>
+              );
+            }
+
+            return (
               <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setImageIndices((prev) => ({
-                      ...prev,
-                      [post.id]:
-                        prev[post.id] === 0
-                          ? post.mediaUrls.length - 1
-                          : (prev[post.id] || 0) - 1,
-                    }));
-                  }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setImageIndices((prev) => ({
-                      ...prev,
-                      [post.id]:
-                        prev[post.id] === post.mediaUrls.length - 1
-                          ? 0
-                          : (prev[post.id] || 0) + 1,
-                    }));
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                  {post.mediaUrls.map((_, index) => (
+                {isVideoFile(currentName) ? (
+                  <div className="relative w-full h-full">
+                    <video
+                      src={currentUrl}
+                      className="w-full h-full object-cover rounded-md"
+                      controls={false}
+                      onClick={(e) => e.stopPropagation()}
+                      playsInline
+                      muted
+                      loop
+                      autoPlay
+                    >
+                      Votre navigateur ne supporte pas la balise vidéo.
+                    </video>
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                      <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
+                        <svg 
+                          className="w-6 h-6 text-white" 
+                          fill="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Image
+                    src={currentUrl}
+                    alt={post.wig?.name || "Post image"}
+                    fill
+                    className="object-contain transition-transform group-hover:scale-105 rounded-md"
+                  />
+                )}
+                {post.mediaUrls.length > 1 && (
+                  <>
                     <button
-                      key={index}
                       onClick={(e) => {
                         e.stopPropagation();
                         setImageIndices((prev) => ({
                           ...prev,
-                          [post.id]: index,
+                          [post.id]:
+                            (prev[post.id] === 0 || typeof prev[post.id] === 'undefined')
+                              ? post.mediaUrls.length - 1
+                              : (prev[post.id] || 0) - 1,
                         }));
                       }}
-                      className={`h-1.5 rounded-full transition-all ${
-                        (imageIndices[post.id] || 0) === index
-                          ? "w-4 bg-white"
-                          : "w-1.5 bg-white/50"
-                      }`}
-                    />
-                  ))}
-                </div>
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition z-10"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImageIndices((prev) => ({
+                          ...prev,
+                          [post.id]:
+                            (prev[post.id] || 0) === post.mediaUrls.length - 1
+                              ? 0
+                              : (prev[post.id] || 0) + 1,
+                        }));
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition z-10"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-0">
+                      {post.mediaUrls.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setImageIndices((prev) => ({
+                              ...prev,
+                              [post.id]: index,
+                            }));
+                          }}
+                          className={`h-1.5 rounded-full transition-all ${
+                            (imageIndices[post.id] || 0) === index
+                              ? "w-4 bg-white"
+                              : "w-1.5 bg-white/50"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </>
-            )}
-          </>
+            );
+          })()
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
-            Pas d&apos;image
+            Pas de média
           </div>
         )}
       </div>
@@ -135,6 +184,7 @@ const PostItem = ({ post, currencies, userBrand }: PostItemProps) => {
               createdAt: post.createdAt,
             }
           }
+          isAdmin={true}
         />
       )}
     </>

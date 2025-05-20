@@ -28,15 +28,17 @@ import {
 import { Button } from "./ui/button";
 import { fr } from "date-fns/locale";
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserBrand } from "@prisma/client";
 import { Expand, Pencil, Trash } from "lucide-react";
 import { FullScreenMediaViewer } from "./full-screen-media-viewer";
 import Link from "next/link";
 import { deletePost } from "@/app/actions/post-actions";
 import { toast } from "sonner";
+import { isVideoFile } from "@/lib/media-utils";
+
 interface PostCardProps {
-  post: PostWithRelations;
+  post: PostWithRelations & { mediaNames?: string[] };
   currencies?: Currency[];
   variant?: "default" | "compact";
   showActions?: boolean;
@@ -56,7 +58,7 @@ export function PostCard({
   onEdit,
   onDelete,
   userBrand,
-  isAdmin = false,
+  isAdmin,
 }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [fullScreenMediaIndex, setFullScreenMediaIndex] = useState<
@@ -87,6 +89,11 @@ export function PostCard({
       toast.error("Failed to delete post");
     }
   };
+
+  useEffect(() => {
+    console.log(post.mediaUrls);
+    console.log("isAdmin", isAdmin);
+  }, [post.mediaUrls, isAdmin]);
 
   return (
     <>
@@ -123,26 +130,42 @@ export function PostCard({
             post.mediaUrls.length > 0 && (
               <div className="bg-muted/50 rounded-md p-2">
                 <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
-                  {(post.mediaUrls as string[]).map((url, index) => (
-                    <div
-                      key={index}
-                      className={`group relative aspect-square flex-shrink-0 rounded-md overflow-hidden snap-center transition-all duration-300 w-[200px] cursor-pointer`}
-                      onClick={() => setFullScreenMediaIndex(index)}
-                    >
-                      <Image
-                        src={url}
-                        alt={`${post.wig?.name || "Product"} image ${
-                          index + 1
-                        }`}
-                        fill
-                        sizes="100%"
-                        className="object-cover transition-transform group-hover:scale-105"
-                      />
-                      <div className="absolute top-2 right-2 bg-background/80 rounded-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Expand className="h-4 w-4" />
+                  {(post.mediaUrls as string[]).map((url, index) => {
+                    const name = post.mediaNames?.[index];
+                    return (
+                      <div
+                        key={index}
+                        className={`group relative aspect-square flex-shrink-0 rounded-md overflow-hidden snap-center transition-all duration-300 w-[200px] cursor-pointer`}
+                        onClick={() => setFullScreenMediaIndex(index)}
+                      >
+                        {isVideoFile(name) ? (
+                          <video
+                            src={url}
+                            className="w-full h-full object-cover" 
+                            controls
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                        ) : (
+                          <>
+                            <Image
+                              src={url}
+                              alt={`${post.wig?.name || "Product"} media ${
+                                index + 1
+                              }`}
+                              fill
+                              sizes="200px"
+                              className="object-cover transition-transform group-hover:scale-105"
+                            />
+                            <div className="absolute top-2 right-2 bg-background/80 rounded-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Expand className="h-4 w-4" />
+                            </div>
+                          </>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -389,6 +412,7 @@ export function PostCard({
       {fullScreenMediaIndex !== null && post.mediaUrls && (
         <FullScreenMediaViewer
           mediaUrls={post.mediaUrls as string[]}
+          mediaNames={post.mediaNames || []}
           initialIndex={fullScreenMediaIndex}
           onClose={() => setFullScreenMediaIndex(null)}
           wigName={post.wig?.name}

@@ -16,7 +16,7 @@ export function ClientPostDisplay({ post, currencies, userBrand }: ClientPostDis
       currencies={currencies}
       variant="default"
       showActions={false}
-      showShareButtons={true}
+      showShareButtons={false}
       userBrand={userBrand}
     />
   );

@@ -3,6 +3,7 @@ export type PostWithRelations = {
   content: string;
   status: string;
   mediaUrls: string[];
+  mediaNames: string[];
   typeId: string;
   type: {
     name: string;

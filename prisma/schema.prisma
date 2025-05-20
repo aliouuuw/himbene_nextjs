@@ -134,6 +134,7 @@ model Post {
   brands       PostBrand[]  // Changed from single brand to many-to-many relationship
   content      String
   mediaUrls    Json?
+  mediaNames   String[] @default([])
   typeId       String?
   type         PostType? @relation(fields: [typeId], references: [id])
   status       PostStatus

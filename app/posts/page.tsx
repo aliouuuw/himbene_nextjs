@@ -2,6 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import prismaClient from "@/lib/prisma-client"
 import Image from 'next/image'
+import { isVideoFile } from "@/lib/media-utils"
 
 async function getPosts() {
   const posts = await prismaClient.post.findMany({
@@ -28,9 +29,12 @@ async function getPosts() {
     title: post.wig?.name || post.brands[0].brand.name,  // Access name through brand
     price: post.wig?.basePrice ? Number(post.wig.basePrice) : null,
     currency: post.wig?.currency?.symbol || 'F',
-    imageUrl: Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0
+    mediaUrl: Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0
       ? post.mediaUrls[0]
-      : "/default-image.jpg"
+      : "/default-image.jpg",
+    mediaName: Array.isArray(post.mediaNames) && post.mediaNames.length > 0
+      ? post.mediaNames[0]
+      : null
   }))
 }
 
@@ -46,12 +50,39 @@ export default async function PostsPage() {
           <Link href={`/posts/${post.id}`} key={post.id} className="group">
             <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               <div className="relative h-64 w-full">
-                <Image 
-                  src={post.imageUrl as string}
-                  alt={post.title}
-                  fill
-                  className="object-contain group-hover:scale-105 transition-transform duration-300"
-                />
+                {isVideoFile(post.mediaName) ? (
+                  <div className="relative w-full h-full">
+                    <video
+                      src={post.mediaUrl as string}
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      autoPlay
+                      playsInline
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    {/* Play indicator overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                      <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                        <svg 
+                          className="w-5 h-5 text-white" 
+                          fill="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Image 
+                    src={post.mediaUrl as string}
+                    alt={post.title}
+                    fill
+                    className="object-contain group-hover:scale-105 transition-transform duration-300"
+                  />
+                )}
               </div>
               <div className="p-4">
                 <h2 className="font-semibold text-lg truncate">{post.title}</h2>

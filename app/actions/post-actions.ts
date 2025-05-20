@@ -11,6 +11,7 @@ import { PostWithRelations } from "@/types";
 export type CreatePostInput = {
   content: string;
   mediaUrls: string[];
+  mediaNames: string[];
   typeId: string;
   scheduledFor?: Date;
   brandIds: string[];
@@ -36,6 +37,7 @@ export async function createDraftPost(data: CreatePostInput) {
       data: {
         content: data.content,
         mediaUrls: data.mediaUrls,
+        mediaNames: data.mediaNames,
         typeId: data.typeId,
         status: "DRAFT",
         scheduledFor: data.scheduledFor,
@@ -421,6 +423,7 @@ export async function updatePost(
     content: string;
     typeId: string;
     mediaUrls: string[];
+    mediaNames: string[];
     brandIds: string[];
     wigData: {
       name: string;
@@ -450,6 +453,7 @@ export async function updatePost(
         content: data.content,
         typeId: data.typeId,
         mediaUrls: data.mediaUrls,
+        mediaNames: data.mediaNames,
         brands: {
           deleteMany: {},
           create: data.brandIds.map(brandId => ({ brandId }))

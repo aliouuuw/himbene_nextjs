@@ -16,6 +16,7 @@ import { Currency, PostWithRelations } from "@/types";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useRouter } from "next/navigation";
 import { Input } from '@/components/ui/input';
+import { isVideoFile } from "@/lib/media-utils";
 
 interface EditPostFormProps {
   post: PostWithRelations;
@@ -26,6 +27,10 @@ interface EditPostFormProps {
   qualities: WigQuality[];
   types: PostType[];
 }
+
+// Add these constants at the top of the file
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB in bytes
+const MAX_VIDEO_SIZE = 8 * 1024 * 1024; // 8MB in bytes
 
 export function EditPostForm({
   post,
@@ -42,6 +47,7 @@ export function EditPostForm({
     content: post.content || "",
     typeId: post.typeId || types[0]?.id || '',
     brandIds: post.brands?.map(b => b.brand.id) || [],
+    mediaNames: post.mediaNames || [],
     wigData: {
       name: post.wig?.name || "",
       description: post.wig?.description || "",
@@ -58,7 +64,32 @@ export function EditPostForm({
   const router = useRouter();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles(prev => [...prev, ...acceptedFiles]);
+    const invalidFiles = acceptedFiles.filter(file => {
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+      return file.size > maxSize;
+    });
+
+    if (invalidFiles.length > 0) {
+      invalidFiles.forEach(file => {
+        const isVideo = file.type.startsWith('video/');
+        const maxSizeMB = isVideo ? '8MB' : '4MB';
+        toast.error(
+          `Le fichier "${file.name}" est trop volumineux. La taille maximum est de ${maxSizeMB}`
+        );
+      });
+
+      // Only add valid files
+      const validFiles = acceptedFiles.filter(file => {
+        const isVideo = file.type.startsWith('video/');
+        const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+        return file.size <= maxSize;
+      });
+      
+      setFiles(prev => [...prev, ...validFiles]);
+    } else {
+      setFiles(prev => [...prev, ...acceptedFiles]);
+    }
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -77,6 +108,7 @@ export function EditPostForm({
   const removeExistingMedia = (index: number) => {
     setFormData(prev => ({
       ...prev,
+      mediaNames: prev.mediaNames.filter((_, i) => i !== index),
       wigData: {
         ...prev.wigData,
         imageUrls: prev.wigData.imageUrls.filter((_, i) => i !== index),
@@ -130,17 +162,20 @@ export function EditPostForm({
 
     try {
       let newMediaUrls: string[] = [];
+      let newMediaNames: string[] = [];
       if (files.length > 0) {
         const uploadResponse = await startUpload(files);
         if (!uploadResponse) {
           throw new Error('Erreur lors de la téléchargement des fichiers');
         }
         newMediaUrls = uploadResponse.map(file => file.url);
+        newMediaNames = uploadResponse.map(file => file.name);
       }
 
       const postDataToSubmit = {
         ...formData,
         mediaUrls: [...formData.wigData.imageUrls, ...newMediaUrls],
+        mediaNames: [...formData.mediaNames, ...newMediaNames],
         wigData: {
           ...formData.wigData,
           imageUrls: [...formData.wigData.imageUrls, ...newMediaUrls],
@@ -322,25 +357,57 @@ export function EditPostForm({
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>Images existantes</Label>
+          <Label>Médias existants</Label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {formData.wigData.imageUrls.map((url, index) => (
-              <div key={index} className="relative aspect-square">
-                <Image
-                  src={url}
-                  alt={`Image ${index + 1}`}
-                  fill
-                  className="object-cover rounded-md"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeExistingMedia(index)}
-                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+            {formData.wigData.imageUrls.map((url, index) => {
+              const fileName = formData.mediaNames[index];
+              const isVideo = isVideoFile(fileName);
+
+              return (
+                <div key={index} className="relative aspect-square group">
+                  {isVideo ? (
+                    <div className="relative w-full h-full rounded-md overflow-hidden">
+                      <video
+                        src={url}
+                        className="w-full h-full object-cover"
+                        muted
+                        loop
+                        autoPlay
+                        playsInline
+                      >
+                        Votre navigateur ne supporte pas la balise vidéo.
+                      </video>
+                      {/* Play icon overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
+                          <svg 
+                            className="w-4 h-4 text-white" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Image
+                      src={url}
+                      alt={`Media ${index + 1}`}
+                      fill
+                      className="object-cover rounded-md"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeExistingMedia(index)}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 z-10"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -349,30 +416,70 @@ export function EditPostForm({
           {isDragActive ? (
             <p>Déposez les fichiers ici ...</p>
           ) : (
-            <p>Glissez et déposez des fichiers ici, ou cliquez pour sélectionner des fichiers</p>
+            <div className="space-y-2">
+              <p>Glissez et déposez des fichiers ici, ou cliquez pour sélectionner des fichiers</p>
+              <p className="text-sm text-muted-foreground">
+                Images (max 4MB) : .jpg, .jpeg, .png<br />
+                Vidéos (max 8MB) : .mp4, .mov
+              </p>
+            </div>
           )}
         </div>
 
         {files.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {files.map((file, index) => (
-              <div key={index} className="relative">
-                <Image
-                  src={URL.createObjectURL(file)}
-                  alt={`Preview ${index + 1}`}
-                  width={200}
-                  height={200}
-                  className="object-cover rounded-md"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeFile(index)}
-                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+            {files.map((file, index) => {
+              const isVideo = file.type.startsWith('video/');
+              
+              return (
+                <div key={index} className="relative aspect-square group">
+                  {isVideo ? (
+                    <div className="relative w-full h-full rounded-md overflow-hidden bg-black/5">
+                      <video
+                        src={URL.createObjectURL(file)}
+                        className="w-full h-full object-cover"
+                        muted
+                        loop
+                        autoPlay
+                        playsInline
+                      >
+                        Votre navigateur ne supporte pas la balise vidéo.
+                      </video>
+                      {/* Play icon overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
+                          <svg 
+                            className="w-4 h-4 text-white" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Image
+                      src={URL.createObjectURL(file)}
+                      alt={`Preview ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className="object-cover rounded-md"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 z-10"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <div className="absolute bottom-2 left-2 right-2 text-xs text-white bg-black/50 px-2 py-1 rounded truncate">
+                    {file.name}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

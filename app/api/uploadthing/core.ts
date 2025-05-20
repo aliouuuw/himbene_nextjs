@@ -8,7 +8,7 @@ const f = createUploadthing();
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
   // Define as many FileRoutes as you like, each with a unique routeSlug
-  postMedia: f({ image: { maxFileSize: "4MB", maxFileCount: 10 } })
+  postMedia: f({ image: { maxFileSize: "4MB", maxFileCount: 10 }, video: { maxFileSize: "8MB", maxFileCount: 10 } })
     .middleware(async () => {
       // Check auth
       const session = await auth.api.getSession({
