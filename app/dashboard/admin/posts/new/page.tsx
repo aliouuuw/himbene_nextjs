@@ -1,4 +1,4 @@
-import { getCurrencies, getPostTypes, getWigQualities, getBrands, getWigColors, getWigSizes } from "@/app/actions/admin-actions";
+import { getCurrencies, getPostTypes, getWigQualities, getWigColors, getWigSizes } from "@/app/actions/admin-actions";
 import { CreatePostForm } from "../_components/create-post-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -8,14 +8,12 @@ export default async function NewPostPage() {
   const [
     currenciesResult,
     qualitiesResult,
-    brandsResult,
     typesResult,
     colorsResult,
     sizesResult,
   ] = await Promise.all([
     getCurrencies(),
     getWigQualities(),
-    getBrands(),
     getPostTypes(),
     getWigColors(),
     getWigSizes(),
@@ -30,7 +28,6 @@ export default async function NewPostPage() {
     : [];
   
   const qualities = qualitiesResult || [];
-  const brands = brandsResult || [];
   const types = typesResult || [];
   const colors = colorsResult || [];
   const sizes = sizesResult || [];
@@ -48,7 +45,6 @@ export default async function NewPostPage() {
       <CreatePostForm
         currencies={currencies}
         qualities={qualities}
-        brands={brands}
         types={types}
         colors={colors}
         sizes={sizes}

@@ -1,11 +1,10 @@
 import { getCommercialDraftPosts } from "@/app/actions/post-actions";
-import { getCurrencies, getPostTypes, getUserBrand } from "@/app/actions/admin-actions";
+import { getCurrencies, getPostTypes } from "@/app/actions/admin-actions";
 import { PostWithRelations } from "@/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { getAuthenticatedUsersAccount } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { UserBrand } from "@prisma/client";
 import { PostsTabs } from "./posts-tabs";
 
 export default async function CommercialHomePage() {
@@ -17,10 +16,9 @@ export default async function CommercialHomePage() {
   if (passwordChangeRequired) {
     return redirect("/change-password");
   }
-  const [postsResult, currencies, userBrand, postTypes] = await Promise.all([
+  const [postsResult, currencies, postTypes] = await Promise.all([
     getCommercialDraftPosts(),
     getCurrencies(),
-    getUserBrand(),
     getPostTypes(),
   ]);
 
@@ -37,8 +35,6 @@ export default async function CommercialHomePage() {
             currency: post.wig.currency as unknown as { id: string; symbol: string; rate: number },
             quality: post.wig.quality as unknown as { id: string; name: string; orderIndex: number }
         } : null,
-        brandIds: post.brands?.map(b => b.brand.name) || [],
-        brands: post.brands as unknown as { brand: { id: string; name: string } }[],
         sharedBy: (post as PostWithRelations).sharedBy || [],
         isShared: Array.isArray((post as PostWithRelations).sharedBy)
           ? (post as PostWithRelations).sharedBy.some((share: { userId: string }) => share.userId === account?.id)
@@ -83,7 +79,6 @@ export default async function CommercialHomePage() {
             <PostsTabs
               posts={unsharedPosts}
               currencies={currencies}
-              userBrand={userBrand as UserBrand}
               postTypes={postTypes}
             />
           </TabsContent>
@@ -92,7 +87,6 @@ export default async function CommercialHomePage() {
             <PostsTabs
               posts={sharedPosts}
               currencies={currencies}
-              userBrand={userBrand as UserBrand}
               postTypes={postTypes}
             />
           </TabsContent>

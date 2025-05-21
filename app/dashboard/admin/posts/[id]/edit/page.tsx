@@ -2,7 +2,6 @@ import { getPostById } from "@/app/actions/post-actions";
 import { EditPostForm } from "@/app/dashboard/admin/posts/_components/edit-post-form";
 
 import { notFound } from "next/navigation";
-import { getBrands } from "@/app/actions/admin-actions";
 import { getCurrencies, getWigQualities, getWigColors, getWigSizes } from "@/app/actions/admin-actions";
 import { getPostTypes } from "@/app/actions/admin-actions";
 import { PostWithRelations } from "@/types";
@@ -26,8 +25,7 @@ export default async function EditPostPage({
   }
 
   // Fetch all the required data for the form
-  const [brands, colors, sizes, currencies, qualities, types] = await Promise.all([
-    getBrands(),
+  const [colors, sizes, currencies, qualities, types] = await Promise.all([
     getWigColors(),
     getWigSizes(),
     getCurrencies(),
@@ -44,7 +42,6 @@ export default async function EditPostPage({
       <h1 className="text-2xl font-bold mb-6">Modifier le post</h1>
       <EditPostForm
         post={post as PostWithRelations}
-        brands={brands}
         colors={colors}
         sizes={sizes}
         currencies={currencies}

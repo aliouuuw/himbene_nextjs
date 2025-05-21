@@ -29,7 +29,6 @@ model User {
   
   platformConnections PlatformConnection[]
   posts              Post[]
-  brands             UserBrand[] // Many-to-many relationship with brands
   sessions           Session[]
   accounts           Account[]
 
@@ -92,33 +91,6 @@ model Jwks {
   @@map("jwks")
 }
 
-model Brand {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  logoUrl     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-  isActive    Boolean   @default(true)
-  users       UserBrand[] // Many-to-many relationship with users
-  posts       PostBrand[]  // Updated to use junction table
-  wigs        Wig[]
-
-  @@index([name])
-}
-
-// Junction table for User-Brand many-to-many relationship
-model UserBrand {
-  userId    String
-  brandId   String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@id([userId, brandId])
-}
-
 model PostType {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -131,7 +103,6 @@ model Post {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brands       PostBrand[]  // Changed from single brand to many-to-many relationship
   content      String
   mediaUrls    Json?
   mediaNames   String[] @default([])
@@ -150,16 +121,6 @@ model Post {
   @@index([userId, status])
 }
 
-// New junction table for Post-Brand many-to-many relationship
-model PostBrand {
-  postId    String
-  brandId   String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@id([postId, brandId])
-}
 
 enum PostStatus {
   DRAFT       // Created by Infographe
@@ -217,8 +178,6 @@ model Wig {
   id          String   @id @default(cuid())
   name        String
   description String?
-  brandId     String
-  brand       Brand    @relation(fields: [brandId], references: [id])
   basePrice   Decimal  @db.Decimal(10, 2)
   currencyId  String   @default("USD")
   currency    Currency @relation(fields: [currencyId], references: [id])
@@ -234,7 +193,7 @@ model Wig {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([brandId, colorId, sizeId, qualityId])
+  @@index([colorId, sizeId, qualityId])
 }
 
 model Currency {

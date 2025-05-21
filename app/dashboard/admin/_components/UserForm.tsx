@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UserRole, Brand } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import { createUser } from '@/app/actions/admin-actions';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,19 +15,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { toast } from 'sonner';
 import { Copy } from 'lucide-react';
 
-interface UserFormProps {
-  brands: Brand[];
-}
 
-export default function UserForm({ brands }: UserFormProps) {
+export default function UserForm() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('COMMERCIAL');
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
 
@@ -39,8 +34,7 @@ export default function UserForm({ brands }: UserFormProps) {
       const result = await createUser({
         email: email,
         name: name,
-        role: role,
-        brandIds: selectedBrands
+        role: role
       });
       
       if (result.success) {
@@ -51,7 +45,6 @@ export default function UserForm({ brands }: UserFormProps) {
         setEmail('');
         setName('');
         setRole('COMMERCIAL');
-        setSelectedBrands([]);
       } else {
         toast.error(result.error || 'Erreur lors de la création de l\'utilisateur');
       }
@@ -69,11 +62,6 @@ export default function UserForm({ brands }: UserFormProps) {
       toast.success('Mot de passe copié dans le presse-papier');
     }
   };
-
-  const brandOptions = brands.map(brand => ({
-    value: brand.id,
-    label: brand.name
-  }));
 
   return (
     <div className="space-y-4">
@@ -141,16 +129,6 @@ export default function UserForm({ brands }: UserFormProps) {
                   <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="brands">Marques</Label>
-              <MultiSelect
-                options={brandOptions}
-                selected={selectedBrands}
-                onChange={setSelectedBrands}
-                placeholder="Sélectionner des marques"
-              />
             </div>
           </div>
           

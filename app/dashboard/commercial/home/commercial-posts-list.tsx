@@ -15,23 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Check, Eye, Share } from "lucide-react";
 import { markPostAsShared, unmarkPostAsShared } from "@/app/actions/post-actions";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { UserBrand } from "@prisma/client";
 import { PostDetailsDialog } from "@/components/post-details-dialog";
 
 interface Props {
   posts: PostWithRelations[];
   currencies: Currency[];
-  userBrand: UserBrand;
 }
 
-export function CommercialPostsList({ posts, currencies, userBrand }: Props) {
+export function CommercialPostsList({ posts, currencies }: Props) {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(null);
-  
-  const getAssociatedUserBrand = (post: PostWithRelations) => {
-    const brand = post.brands?.find(b => b.brand.id == userBrand.brandId);
-    return brand?.brand.name || 'No brand';
-  };
 
   const handleShare = async (postId: string, isShared: boolean, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,7 +54,6 @@ export function CommercialPostsList({ posts, currencies, userBrand }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead>Voir</TableHead>
-              <TableHead>Marque</TableHead>
               <TableHead>Perruque</TableHead>
               <TableHead>Créé le</TableHead>
               <TableHead>Médias</TableHead>
@@ -83,13 +74,6 @@ export function CommercialPostsList({ posts, currencies, userBrand }: Props) {
                   <Eye className="h-4 w-4" />
                 </Button>
               </TableCell>
-                <TableCell>
-                  {getAssociatedUserBrand(post) && (
-                    <Badge variant="secondary">
-                      {getAssociatedUserBrand(post)}
-                    </Badge>
-                  )}
-                </TableCell>
                 <TableCell>{post.wig?.name || "N/A"}</TableCell>
                 <TableCell>
                   {format(new Date(post.createdAt), "MMM d, yyyy")}
@@ -123,7 +107,6 @@ export function CommercialPostsList({ posts, currencies, userBrand }: Props) {
           open={!!selectedPost}
           showShareButtons={true}
           onOpenChange={(open: boolean) => !open && setSelectedPost(null)}
-          userBrand={userBrand}
         />
       )}
     </>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Brand, UserRole } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
 import { updateUser, deleteUser } from '@/app/actions/admin-actions';
 import { Button } from "@/components/ui/button";
 import {
@@ -23,25 +23,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { toast } from "sonner";
 
-interface UserWithBrands extends User {
-  brands: { brand: Brand }[];
-}
-
-interface UserListProps {
-  users: UserWithBrands[];
-  brands: Brand[];
-}
-
-export default function UserList({ users, brands }: UserListProps) {
-  const [editingUser, setEditingUser] = useState<UserWithBrands | null>(null);
+export default function UserList({ users }: { users: User[] }) {
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const handleUpdate = async (userId: string, data: {
     role: UserRole;
     name: string;
-    brandIds: string[];
   }) => {
     try {
       await updateUser(userId, data);
@@ -79,9 +68,6 @@ export default function UserList({ users, brands }: UserListProps) {
                 <p className="text-sm text-muted-foreground">
                   {user.name}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Brands: {user.brands?.map(b => b.brand.name).join(', ') || 'None'}
-                </p>
               </div>
               <div className="flex gap-2">
                 <Dialog>
@@ -100,7 +86,6 @@ export default function UserList({ users, brands }: UserListProps) {
                       </DialogHeader>
                       <EditUserForm
                         user={editingUser}
-                        brands={brands}
                         onSubmit={(data) => handleUpdate(user.id, data)}
                       />
                     </DialogContent>
@@ -121,33 +106,21 @@ export default function UserList({ users, brands }: UserListProps) {
   );
 }
 
-function EditUserForm({ user, brands, onSubmit }: {
-  user: UserWithBrands;
-  brands: Brand[];
+function EditUserForm({ user, onSubmit }: {
+  user: User;
   onSubmit: (data: {
     role: UserRole;
     name: string;
-    brandIds: string[];
   }) => void;
 }) {
   const [role, setRole] = useState<UserRole>(user.role);
   const [name, setName] = useState(user.name || '');
-  const [selectedBrands, setSelectedBrands] = useState(
-    user.brands?.map(b => b.brand.id) || []
-  );
-
-  // Transform brands into the format expected by MultiSelect
-  const brandOptions = brands.map(brand => ({
-    label: brand.name,
-    value: brand.id
-  }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
       role,
       name,
-      brandIds: selectedBrands,
     });
   };
 
@@ -172,16 +145,6 @@ function EditUserForm({ user, brands, onSubmit }: {
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Marques</label>
-        <MultiSelect
-          options={brandOptions}
-          selected={selectedBrands}
-          onChange={setSelectedBrands}
-          placeholder="Sélectionner le(s) marque(s)"
         />
       </div>
 

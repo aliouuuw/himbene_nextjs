@@ -7,7 +7,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { UserBrand, Brand, WigQuality } from "@prisma/client";
+import { WigQuality } from "@prisma/client";
 import { PostDetailsDialog } from "@/components/post-details-dialog";
 import { useState } from "react";
 import { isVideoFile } from "@/lib/media-utils";
@@ -15,12 +15,10 @@ import { isVideoFile } from "@/lib/media-utils";
 interface PostItemProps {
   post: PostWithRelations & { mediaNames?: string[] };
   currencies: Currency[];
-  userBrand?: UserBrand;
   qualities: WigQuality[];
-  brands: Brand[];
 }
 
-const PostItem = ({ post, currencies, userBrand }: PostItemProps) => {
+const PostItem = ({ post, currencies }: PostItemProps) => {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations & { mediaNames?: string[] } | null>(
     null
   );
@@ -177,13 +175,6 @@ const PostItem = ({ post, currencies, userBrand }: PostItemProps) => {
           open={!!selectedPost}
           showShareButtons={false}
           onOpenChange={(open) => !open && setSelectedPost(null)}
-          userBrand={
-            userBrand || {
-              userId: post.userId,
-              brandId: post.brands[0].brand.id,
-              createdAt: post.createdAt,
-            }
-          }
           isAdmin={true}
         />
       )}

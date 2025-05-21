@@ -11,13 +11,6 @@ export type PostWithRelations = {
   createdAt: Date;
   updatedAt: Date;
   userId: string;
-  brandIds: string[];
-  brands: {
-    brand: {
-      id: string;
-      name: string;
-    };
-  }[];
   user: {
     name: string | null;
   };

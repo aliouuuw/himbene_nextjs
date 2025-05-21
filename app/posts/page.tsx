@@ -11,11 +11,6 @@ async function getPosts() {
       createdAt: 'desc' // Show newest posts first
     },
     include: {
-      brands: {
-        include: {
-          brand: true  // Include the actual brand data
-        }
-      },
       wig: {
         include: {
           currency: true
@@ -26,7 +21,7 @@ async function getPosts() {
 
   return posts.map(post => ({
     id: post.id,
-    title: post.wig?.name || post.brands[0].brand.name,  // Access name through brand
+    title: post.wig?.name ,
     price: post.wig?.basePrice ? Number(post.wig.basePrice) : null,
     currency: post.wig?.currency?.symbol || 'F',
     mediaUrl: Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0
@@ -78,7 +73,7 @@ export default async function PostsPage() {
                 ) : (
                   <Image 
                     src={post.mediaUrl as string}
-                    alt={post.title}
+                    alt={post.title || ''}
                     fill
                     className="object-contain group-hover:scale-105 transition-transform duration-300"
                   />

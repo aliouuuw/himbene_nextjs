@@ -12,15 +12,14 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { UserBrand } from "@prisma/client";
+import { isVideoFile } from "@/lib/media-utils";
 
 interface Props {
   posts: PostWithRelations[];
   currencies: Currency[];
-  userBrand: UserBrand;
 }
 
-export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
+export function CommercialPostsGrid({ posts, currencies }: Props) {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(null);
   const [imageIndices, setImageIndices] = useState<Record<string, number>>(() => {
     // Initialize indices for all posts
@@ -30,11 +29,6 @@ export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
     });
     return initialIndices;
   });
-
-  const getAssociatedUserBrand = (post: PostWithRelations) => {
-    const brand = post.brands?.find(b => b.brand.id == userBrand.brandId);
-    return brand?.brand?.name || 'No brand';
-  };
 
   const handleShare = async (postId: string, isShared: boolean, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -71,12 +65,39 @@ export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
             >
               {post.mediaUrls[0] ? (
                 <>
-                  <Image
-                    src={post.mediaUrls[imageIndices[post.id] || 0] || post.mediaUrls[0]}
-                    alt={post.wig?.name || "Post image"}
-                    fill
-                    className="object-contain transition-transform group-hover:scale-105"
-                  />
+                  {isVideoFile(post.mediaNames?.[imageIndices[post.id] || 0]) ? (
+                    <div className="relative w-full h-full">
+                      <video
+                        src={post.mediaUrls[imageIndices[post.id] || 0]}
+                        className="w-full h-full object-cover"
+                        muted
+                        loop
+                        autoPlay
+                        playsInline
+                      >
+                        Votre navigateur ne supporte pas la balise vidéo.
+                      </video>
+                      {/* Play indicator overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                          <svg 
+                            className="w-5 h-5 text-white" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Image
+                      src={post.mediaUrls[imageIndices[post.id] || 0] || post.mediaUrls[0]}
+                      alt={post.wig?.name || "Post image"}
+                      fill
+                      className="object-contain transition-transform group-hover:scale-105"
+                    />
+                  )}
                   {post.mediaUrls.length > 1 && (
                     <>
                       <button
@@ -87,7 +108,7 @@ export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
                             [post.id]: prev[post.id] === 0 ? post.mediaUrls.length - 1 : (prev[post.id] || 0) - 1
                           }));
                         }}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition z-10"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </button>
@@ -99,11 +120,11 @@ export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
                             [post.id]: prev[post.id] === post.mediaUrls.length - 1 ? 0 : (prev[post.id] || 0) + 1
                           }));
                         }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition z-10"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </button>
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
                         {post.mediaUrls.map((_, index) => (
                           <button
                             key={index}
@@ -125,10 +146,10 @@ export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
                 </>
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">
-                  Pas d&apos;image
+                  Pas de média
                 </div>
               )}
-              <div className="absolute top-2 right-2">
+              <div className="absolute top-2 right-2 z-10">
                 <Button
                   variant="secondary"
                   size="icon"
@@ -151,9 +172,6 @@ export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
                     {post.wig?.basePrice} {post.wig?.currency?.symbol}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {getAssociatedUserBrand(post)}
-                </p>
                 {post.wig?.quality?.name && (
                   <Badge variant="outline" className="text-xs">
                     {post.wig.quality.name}
@@ -186,7 +204,6 @@ export function CommercialPostsGrid({ posts, currencies, userBrand }: Props) {
           open={!!selectedPost}
           showShareButtons={true}
           onOpenChange={(open: boolean) => !open && setSelectedPost(null)}
-          userBrand={userBrand}
         />
       )}
     </>

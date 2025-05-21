@@ -28,7 +28,6 @@ export default async function AdminPage() {
       role: "ADMIN"
     }
   });
-  const brandCount = await prismaClient.brand.count({});
   const platformCount = await prismaClient.platformConnection.count();
   const postCount = await prismaClient.post.count();
   const colorCount = await prismaClient.wigColor.count();
@@ -98,13 +97,6 @@ export default async function AdminPage() {
       iconName: "pen-tool",
       href: "/dashboard/admin/posts",
       count: `${postCount} ${postCount === 1 ? "Post" : "Posts"}`
-    },
-    {
-      title: "Marques",
-      description: "Gérer les marques et leurs détails",
-      iconName: "building-2",
-      href: "/dashboard/admin/brands",
-      count: `${brandCount} ${brandCount === 1 ? "Marque" : "Marques"}`
     },
     {
       title: "Couleurs",

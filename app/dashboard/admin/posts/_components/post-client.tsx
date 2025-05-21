@@ -3,7 +3,7 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LayoutGrid, List, PlusCircle } from "lucide-react";
 import { PostWithRelations, Currency as CurrencyType } from "@/types";
-import { UserBrand, WigQuality, Brand as BrandType, PostType } from "@prisma/client";
+import { WigQuality, PostType } from "@prisma/client";
 import { PostsList } from "../_components/posts-list";
 import PostItem from "../_components/post-item";
 import Link from "next/link";
@@ -18,9 +18,7 @@ export default function PostsPage({
   initialData: { 
     posts: PostWithRelations[],
     currencies: CurrencyType[],
-    userBrand?: UserBrand,
     qualities: WigQuality[],
-    brands: BrandType[],
     postTypes: PostType[]
   } 
 }) {
@@ -74,9 +72,7 @@ export default function PostsPage({
               <PostItem 
                 post={post} 
                 currencies={initialData.currencies} 
-                userBrand={initialData.userBrand} 
                 qualities={initialData.qualities}
-                brands={initialData.brands}
               />
             )}
           />
@@ -86,9 +82,7 @@ export default function PostsPage({
             <PostsList 
               posts={filteredPosts} 
               currencies={initialData.currencies} 
-              userBrand={initialData.userBrand as UserBrand} 
               qualities={initialData.qualities}
-              brands={initialData.brands}
             />
         </div>
         </TabsContent>

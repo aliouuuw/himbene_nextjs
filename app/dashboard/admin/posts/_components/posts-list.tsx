@@ -27,19 +27,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PostWithRelations, Currency } from "@/types";
 import { fr } from "date-fns/locale";
-import { WigQuality, Brand, UserBrand } from "@prisma/client";
-import { Badge } from "@/components/ui/badge";
+import { WigQuality } from "@prisma/client";
 import { Share } from "lucide-react";
 
 interface Props {
   posts: PostWithRelations[];
   currencies: Currency[];
   qualities: WigQuality[];
-  brands: Brand[];
-  userBrand: UserBrand;
 }
 
-export function PostsList({ posts, currencies, userBrand }: Props) {
+export function PostsList({ posts, currencies }: Props) {
   const [selectedPost, setSelectedPost] = useState<PostWithRelations | null>(null);
 
   const handleDelete = async (postId: string) => {
@@ -70,7 +67,6 @@ export function PostsList({ posts, currencies, userBrand }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Marques</TableHead>
               <TableHead>Perruque</TableHead>
               <TableHead>Créé le</TableHead>
               <TableHead>Médias</TableHead>
@@ -85,15 +81,6 @@ export function PostsList({ posts, currencies, userBrand }: Props) {
                 className="cursor-pointer"
                 onClick={() => setSelectedPost(post)}
               >
-                <TableCell>
-                  <div className="flex gap-1 flex-wrap">
-                    {post.brands?.map((brandRelation) => (
-                      <Badge key={brandRelation.brand.id} variant="secondary" className="text-xs">
-                        {brandRelation.brand.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
                 <TableCell>{post.wig?.name || "N/A"}</TableCell>
                 <TableCell>
                   {format(new Date(post.createdAt), "d MMMM yyyy", { locale: fr })}
@@ -146,7 +133,6 @@ export function PostsList({ posts, currencies, userBrand }: Props) {
           open={!!selectedPost}
           showShareButtons={false}
           onOpenChange={(open: boolean) => !open && setSelectedPost(null)}
-          userBrand={userBrand as UserBrand}
           isAdmin={true}
         />
       )}

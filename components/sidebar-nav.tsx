@@ -14,7 +14,6 @@ import {
   User,
   Palette,
   Ruler,
-  Building2,
   Currency,
   Award,
   Tag,
@@ -57,11 +56,6 @@ export const navItems: NavItem[] = [
         href: "/dashboard/admin/posttypes",
         label: "Tags",
         icon: Tag,
-      },
-      {
-        href: "/dashboard/admin/brands",
-        label: "Marques",
-        icon: Building2,
       },
       {
         href: "/dashboard/admin/sizes",

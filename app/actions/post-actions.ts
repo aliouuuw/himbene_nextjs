@@ -14,7 +14,6 @@ export type CreatePostInput = {
   mediaNames: string[];
   typeId: string;
   scheduledFor?: Date;
-  brandIds: string[];
   wigData: {
     name: string;
     description: string;
@@ -42,11 +41,6 @@ export async function createDraftPost(data: CreatePostInput) {
         status: "DRAFT",
         scheduledFor: data.scheduledFor,
         userId: account.id,
-        brands: {
-          create: data.brandIds.map((brandId) => ({
-            brandId,
-          })),
-        },
         wigId: (
           await prismaClient.wig.create({
             data: {
@@ -58,18 +52,12 @@ export async function createDraftPost(data: CreatePostInput) {
               currencyId: data.wigData.currencyId,
               qualityId: data.wigData.qualityId,
               imageUrls: data.wigData.imageUrls || [],
-              brandId: data.brandIds[0],
             },
           })
         ).id,
       },
       include: {
         user: true,
-        brands: {
-          include: {
-            brand: true,
-          },
-        },
         wig: {
           include: {
             color: true,
@@ -130,11 +118,6 @@ export async function getAdminPosts(): Promise<{
             name: true,
           },
         },
-        brands: {
-          include: {
-            brand: true,
-          },
-        },
         wig: {
           include: {
             color: true,
@@ -167,31 +150,12 @@ export async function getCommercialDraftPosts(): Promise<{
     const account = await getAuthenticatedUserFromDb();
     if (!account) throw new Error("Not authenticated");
 
-    const userBrands = await prismaClient.userBrand.findMany({
-      where: { userId: account.id },
-      select: { brandId: true },
-    });
-
-    const brandIds = userBrands.map((ub) => ub.brandId);
-
     const posts = await prismaClient.post.findMany({
       where: {
-        brands: {
-          some: {
-            brandId: {
-              in: brandIds,
-            },
-          },
-        },
         status: "DRAFT",
       },
       include: {
         user: true,
-        brands: {
-          include: {
-            brand: true,
-          },
-        },
         wig: {
           include: {
             color: true,
@@ -266,16 +230,6 @@ export async function getInfographePosts(): Promise<{
         user: {
           select: {
             name: true,
-          },
-        },
-        brands: {
-          include: {
-            brand: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
           },
         },
         wig: {
@@ -424,7 +378,6 @@ export async function updatePost(
     typeId: string;
     mediaUrls: string[];
     mediaNames: string[];
-    brandIds: string[];
     wigData: {
       name: string;
       description: string;
@@ -453,11 +406,7 @@ export async function updatePost(
         content: data.content,
         typeId: data.typeId,
         mediaUrls: data.mediaUrls,
-        mediaNames: data.mediaNames,
-        brands: {
-          deleteMany: {},
-          create: data.brandIds.map(brandId => ({ brandId }))
-        }
+        mediaNames: data.mediaNames
       },
     });
 
@@ -556,16 +505,6 @@ export async function getPostById(postId: string): Promise<PostWithRelations | n
         user: {
           select: { name: true }
         },
-        brands: {
-          include: {
-            brand: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
-        },
         wig: {
           include: {
             color: true,
@@ -583,7 +522,6 @@ export async function getPostById(postId: string): Promise<PostWithRelations | n
 
     const serializedPost = {
       ...post,
-      brandIds: post.brands.map(b => b.brand.id),
       isShared: post.sharedBy.length > 0,
       wig: post.wig ? {
         ...post.wig,

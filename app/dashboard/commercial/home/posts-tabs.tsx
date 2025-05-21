@@ -5,18 +5,17 @@ import { LayoutGrid, List } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { PostWithRelations, Currency as CurrencyType } from "@/types";
-import { UserBrand, PostType } from "@prisma/client";
+import { PostType } from "@prisma/client";
 import { CommercialPostsGrid } from "./commercial-posts-grid";
 import { CommercialPostsList } from "./commercial-posts-list";
 
 interface PostsTabsProps {
   posts: PostWithRelations[];
   currencies: CurrencyType[];
-  userBrand: UserBrand;
   postTypes: PostType[];
 }
 
-export function PostsTabs({ posts, currencies, userBrand, postTypes }: PostsTabsProps) {
+export function PostsTabs({ posts, currencies, postTypes }: PostsTabsProps) {
   const [selectedType, setSelectedType] = useState<string>("all");
 
   const filteredPosts = selectedType === "all" 
@@ -53,14 +52,12 @@ export function PostsTabs({ posts, currencies, userBrand, postTypes }: PostsTabs
         <CommercialPostsGrid
           posts={filteredPosts}
           currencies={currencies}
-          userBrand={userBrand}
         />
       </TabsContent>
       <TabsContent value="list">
         <CommercialPostsList
           posts={filteredPosts}
           currencies={currencies}
-          userBrand={userBrand}
         />
       </TabsContent>
     </Tabs>

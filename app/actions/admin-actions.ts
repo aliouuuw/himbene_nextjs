@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any*/
 'use server'
 
 import prismaClient from "@/lib/prisma-client";
-import { isAdmin, auth, getAuthenticatedUserFromDb } from "@/lib/auth";
+import { isAdmin, auth } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { fetchExchangeRates } from "@/lib/exchange-rates";
@@ -12,7 +11,6 @@ interface CreateUserData {
   email: string;
   role: string;
   name: string;
-  brandIds: string[];
 }
 
 interface CurrencyData {
@@ -44,16 +42,6 @@ export async function createUser(data: CreateUserData) {
     if (!result.token) {
       throw new Error('Failed to create user');
     }
-    
-    // Now create the brand associations
-    if (data.brandIds.length > 0) {
-      await prismaClient.userBrand.createMany({
-        data: data.brandIds.map(brandId => ({
-          userId: result.user.id,
-          brandId
-        }))
-      });
-    }
 
     // Update the user with password change required
     const account = await prismaClient.account.findFirst({
@@ -67,7 +55,6 @@ export async function createUser(data: CreateUserData) {
       });
     }
 
-    // Get the complete user with brands
     const user = await prismaClient.user.findUnique({
       where: { id: result.user.id }
     });
@@ -98,93 +85,10 @@ export async function getUsers() {
       isActive: true,  // Only show active users
       deletedAt: null  // And those that haven't been deleted
     },
-    include: {
-      brands: {
-        include: {
-          brand: true
-        }
-      }
-    },
     orderBy: {
       createdAt: 'desc'
     }
   });
-}
-
-export async function createBrand(data: {
-  name: string;
-  description: string;
-  logoUrl: string;
-  isActive: boolean;
-}) {
-  try {
-    const brand = await prismaClient.brand.create({
-      data: {
-        name: data.name,
-        description: data.description || null,
-        logoUrl: data.logoUrl || null, // Make sure this accepts the URL
-        isActive: data.isActive,
-      },
-    });
-    return { success: true, brand };
-  } catch (error: any) {
-    console.error("Error creating brand:", error);
-    return { success: false, error: error.message };
-  }
-}
-
-export async function getBrands() {
-
-  return await prismaClient.brand.findMany();
-}
-
-export async function getUserBrand() {
-  const user = await getAuthenticatedUserFromDb();
-  return await prismaClient.userBrand.findFirst({
-    where: { userId: user?.id },
-    include: {
-      brand: true
-    }
-  });
-}
-
-export async function deleteBrand(id: string) {
-  try {
-    await prismaClient.brand.delete({
-      where: { id }
-    });
-    revalidatePath("/dashboard/admin/brands");
-    return { success: true };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Failed to delete brand" };
-  }
-}
-
-export async function updateBrand(
-  id: string,
-  data: {
-    name: string;
-    description: string;
-    logoUrl: string;
-    isActive: boolean;
-  }
-) {
-  try {
-    const brand = await prismaClient.brand.update({
-      where: { id },
-      data: {
-        name: data.name,
-        description: data.description || null,
-        logoUrl: data.logoUrl || null, // Make sure this accepts the URL
-        isActive: data.isActive,
-      },
-    });
-    return { success: true, brand };
-  } catch (error: any) {
-    console.error("Error updating brand:", error);
-    return { success: false, error: error.message };
-  }
 }
 
 export async function getWigColors() {
@@ -481,7 +385,6 @@ export async function syncExchangeRates() {
 export async function updateUser(userId: string, data: {
   role?: UserRole;
   name?: string;
-  brandIds?: string[];
   isActive?: boolean;
 }) {
   
@@ -495,20 +398,7 @@ export async function updateUser(userId: string, data: {
       role: data.role,
       name: data.name,
       isActive: data.isActive,
-      brands: {
-        deleteMany: {},
-        create: data.brandIds?.map(brandId => ({
-          brandId
-        }))
-      }
-    },
-    include: {
-      brands: {
-        include: {
-          brand: true
-        }
-      }
-    }
+    },  
   });
 
   revalidatePath('/admin/users');

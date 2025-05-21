@@ -13,17 +13,15 @@ import Image from 'next/image';
 import { createDraftPost, CreatePostInput } from '@/app/actions/post-actions';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brand, PostType, WigColor, WigQuality, WigSize } from '@prisma/client';
+import { PostType, WigColor, WigQuality, WigSize } from '@prisma/client';
 import { useUploadThing } from '@/lib/uploadthing';
 import { Currency } from "@/types";
 import { fr } from 'date-fns/locale';
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { useRouter } from "next/navigation";
 import { Input } from '@/components/ui/input';
 
 interface CreatePostFormProps {
-  brands: Brand[];
   colors: WigColor[];
   sizes: WigSize[];
   currencies: Currency[];
@@ -35,7 +33,6 @@ interface CreatePostFormProps {
 const initialFormData: Omit<CreatePostInput, 'mediaUrls' | 'mediaNames'> & { mediaUrlsString: string; mediaNamesString: string } = {
   content: "",
   typeId: "",
-  brandIds: [],
   wigData: {
     name: "",
     description: "",
@@ -55,7 +52,6 @@ const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB in bytes
 const MAX_VIDEO_SIZE = 8 * 1024 * 1024; // 8MB in bytes
 
 export function CreatePostForm({ 
-  brands,
   colors,
   sizes,
   currencies,
@@ -135,7 +131,7 @@ export function CreatePostForm({
     }));
   };
 
-  const handleSelectChange = (name: keyof Omit<CreatePostInput, 'mediaUrls' | 'wigData' | 'brandIds'>, value: string) => {
+  const handleSelectChange = (name: keyof Omit<CreatePostInput, 'mediaUrls' | 'wigData'>, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
@@ -151,10 +147,6 @@ export function CreatePostForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.brandIds.length === 0) {
-      toast.error('Veuillez sélectionner au moins une marque');
-      return;
-    }
 
     // Validate wig data
     if (!formData.wigData.name || !formData.wigData.colorId || !formData.wigData.sizeId || formData.wigData.basePrice <= 0) {
@@ -247,16 +239,7 @@ export function CreatePostForm({
           />
         </div>
         <div className="space-y-2">
-        <Label htmlFor="brands">Marques</Label>
-        <MultiSelect
-          options={brands.map(brand => ({
-            label: brand.name,
-            value: brand.id
-          }))}
-          selected={formData.brandIds}
-          onChange={(selected) => setFormData(prev => ({ ...prev, brandIds: selected }))}
-          placeholder="Sélectionner des marques"
-        />
+
         <Label htmlFor="wigQuality">Qualité</Label>
         <Select
           value={formData.wigData.qualityId}

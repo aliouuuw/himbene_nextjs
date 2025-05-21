@@ -10,17 +10,15 @@ import Image from 'next/image';
 import { updatePost } from '@/app/actions/post-actions';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brand, PostType, WigColor, WigQuality, WigSize } from '@prisma/client';
+import { PostType, WigColor, WigQuality, WigSize } from '@prisma/client';
 import { useUploadThing } from '@/lib/uploadthing';
 import { Currency, PostWithRelations } from "@/types";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { useRouter } from "next/navigation";
 import { Input } from '@/components/ui/input';
 import { isVideoFile } from "@/lib/media-utils";
 
 interface EditPostFormProps {
   post: PostWithRelations;
-  brands: Brand[];
   colors: WigColor[];
   sizes: WigSize[];
   currencies: Currency[];
@@ -34,7 +32,6 @@ const MAX_VIDEO_SIZE = 8 * 1024 * 1024; // 8MB in bytes
 
 export function EditPostForm({
   post,
-  brands,
   colors,
   sizes,
   currencies,
@@ -46,7 +43,6 @@ export function EditPostForm({
   const [formData, setFormData] = useState({
     content: post.content || "",
     typeId: post.typeId || types[0]?.id || '',
-    brandIds: post.brands?.map(b => b.brand.id) || [],
     mediaNames: post.mediaNames || [],
     wigData: {
       name: post.wig?.name || "",
@@ -148,10 +144,6 @@ export function EditPostForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.brandIds.length === 0) {
-      toast.error('Veuillez sélectionner au moins une marque');
-      return;
-    }
 
     if (!formData.wigData.name || !formData.wigData.colorId || !formData.wigData.sizeId || formData.wigData.basePrice <= 0) {
       toast.error('Veuillez remplir toutes les informations de la perruque');
@@ -235,19 +227,6 @@ export function EditPostForm({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Marques</Label>
-            <MultiSelect
-              options={brands.map(brand => ({
-                value: brand.id,
-                label: brand.name
-              }))}
-              selected={formData.brandIds}
-              onChange={(values) => setFormData(prev => ({ ...prev, brandIds: values }))}
-              className="w-full"
-            />
           </div>
         </div>
 

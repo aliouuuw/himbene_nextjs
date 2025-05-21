@@ -29,7 +29,6 @@ import { Button } from "./ui/button";
 import { fr } from "date-fns/locale";
 import { CurrencyCode, getCurrencyFlag } from "@/lib/currency-utils";
 import { useEffect, useState } from "react";
-import { UserBrand } from "@prisma/client";
 import { Expand, Pencil, Trash } from "lucide-react";
 import { FullScreenMediaViewer } from "./full-screen-media-viewer";
 import Link from "next/link";
@@ -45,7 +44,6 @@ interface PostCardProps {
   showShareButtons?: boolean;
   onEdit?: (post: PostWithRelations) => void;
   onDelete?: (postId: string) => void;
-  userBrand: UserBrand;
   isAdmin?: boolean;
 }
 
@@ -57,7 +55,6 @@ export function PostCard({
   showShareButtons = true,
   onEdit,
   onDelete,
-  userBrand,
   isAdmin,
 }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -74,12 +71,6 @@ export function PostCard({
   };
 
   const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/posts/${post.id}` || "";
-
-  const getAssociatedUserBrand = (post: PostWithRelations) => {
-    if (!userBrand?.brandId) return "No associated brand";
-    const brand = post.brands?.find((b) => b.brand.id === userBrand.brandId);
-    return brand?.brand.name || "No associated brand";
-  };
 
   const handleDelete = async () => {
     const result = await deletePost(post.id);
@@ -176,33 +167,12 @@ export function PostCard({
               <div className="flex flex-col gap-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
-                    {/* Post Type & Brand Section */}
+                    {/* Post Type Section */}
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       {post.type?.name && (
                         <Badge variant="secondary" className="text-xs">
                           {post.type.name}
                         </Badge>
-                      )}
-                      {post.brands && post.brands.length > 0 && (
-                        <>
-                          {!isAdmin ? (
-                            <Badge variant="outline" className="text-xs">
-                              {getAssociatedUserBrand(post)}
-                            </Badge>
-                          ) : (
-                            <div className="flex flex-wrap gap-1">
-                              {post.brands.map((brand) => (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs"
-                                  key={brand.brand.id}
-                                >
-                                  {brand.brand.name}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </>
                       )}
                     </div>
 

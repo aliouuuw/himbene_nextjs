@@ -3,7 +3,7 @@ import {
   getPublishedPosts,
   getScheduledPosts,
 } from "@/app/actions/post-actions";
-import { getCurrencies, getPostTypes, getUserBrand, getWigQualities, getBrands } from "@/app/actions/admin-actions";
+import { getCurrencies, getPostTypes, getWigQualities } from "@/app/actions/admin-actions";
 import PostClient from "./_components/post-client";
 
 export default async function PostsPageServer() {
@@ -12,18 +12,14 @@ export default async function PostsPageServer() {
     published,
     scheduled,
     currenciesResult,
-    userBrandResult,
     qualitiesResult,
-    brandsResult,
     postTypesResult,
   ] = await Promise.all([
     getAdminPosts(),
     getPublishedPosts(),
     getScheduledPosts(),
     getCurrencies(),
-    getUserBrand(),
     getWigQualities(),
-    getBrands(),
     getPostTypes(),
   ]);
 
@@ -55,8 +51,6 @@ export default async function PostsPageServer() {
           quality: post.wig.quality,
         }
       : null,
-    brands: post.brands,
-    brandIds: post.brands?.map((b) => b.brand.id) || [],
     scheduledFor: post.scheduledFor,
   }));
 
@@ -71,9 +65,7 @@ export default async function PostsPageServer() {
   const initialData = {
     posts: serializedPosts,
     currencies,
-    userBrand: userBrandResult || undefined,
     qualities: qualitiesResult || [],
-    brands: brandsResult || [],
     postTypes: postTypesResult || [],
   };
 
